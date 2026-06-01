@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>채용 공고 히든 시그널 분석기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans-serif;background:#f8f8f6;color:#1a1a1a;min-height:100vh;padding:2rem 1rem}
+.container{max-width:760px;margin:0 auto}
+.header{margin-bottom:2rem}
+.header h1{font-size:22px;font-weight:600;margin-bottom:6px}
+.header p{font-size:13px;color:#666;line-height:1.6}
+.card{background:#fff;border:0.5px solid #e0e0d8;border-radius:12px;padding:1.5rem;margin-bottom:1rem}
+.tabs{display:flex;border:0.5px solid #e0e0d8;border-radius:8px;overflow:hidden;margin-bottom:1rem}
+.tab{flex:1;padding:9px 0;font-size:13px;background:transparent;border:none;cursor:pointer;color:#666;font-family:inherit}
+.tab.active{background:#f0f0ec;color:#1a1a1a;font-weight:500}
+.tab:hover:not(.active){background:#f5f5f2}
+input[type=text],input[type=number],select,textarea{width:100%;padding:8px 12px;border:0.5px solid #d0d0c8;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;color:#1a1a1a;outline:none;transition:border-color 0.15s}
+input:focus,select:focus,textarea:focus{border-color:#888}
+textarea{resize:vertical}
+button{padding:8px 18px;border:0.5px solid #d0d0c8;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;color:#1a1a1a;cursor:pointer;transition:background 0.15s}
+button:hover{background:#f0f0ec}
+button.primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+button.primary:hover{background:#333}
+button:disabled{opacity:0.5;cursor:not-allowed}
+.search-row{display:flex;gap:8px;margin-bottom:1rem}
+.search-row input{flex:1}
+.company-list{list-style:none;border:0.5px solid #d0d0c8;border-radius:8px;overflow:hidden;margin-bottom:1rem;max-height:200px;overflow-y:auto;background:#fff}
+.company-list li{padding:9px 14px;font-size:13px;cursor:pointer;border-bottom:0.5px solid #e8e8e0}
+.company-list li:last-child{border-bottom:none}
+.company-list li:hover{background:#f5f5f2}
+.meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.5rem}
+.meta-card{background:#f5f5f2;border-radius:8px;padding:10px 12px}
+.meta-card .label{font-size:11px;color:#888;margin-bottom:2px}
+.meta-card .value{font-size:17px;font-weight:500}
+.risk-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:8px;font-size:12px;font-weight:500;margin-bottom:1.5rem}
+.section-title{font-size:14px;font-weight:500;margin-bottom:10px}
+.signal-row{margin-bottom:10px}
+.signal-label{display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:3px}
+.bar-bg{height:8px;background:#e8e8e0;border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width 0.6s ease}
+.highlight-list{list-style:none;margin-bottom:1.5rem}
+.highlight-list li{font-size:12px;color:#555;padding:8px 10px;border-left:2px solid #ccc;margin-bottom:6px;line-height:1.6;background:#f8f8f6;border-radius:0 8px 8px 0}
+.chip{font-size:11px;padding:3px 8px;border-radius:20px;border:0.5px solid #d0d0c8;color:#666;display:inline-block;margin:2px}
+.chip.warning{background:#FFF3CD;color:#856404;border-color:#F5C842}
+.separator{border-top:0.5px solid #e0e0d8;margin:1.5rem 0;padding-top:1.5rem}
+.msg{font-size:12px;margin-top:6px}
+.msg.success{color:#2e7d32}
+.msg.error{color:#c62828}
+.no-result{padding:2.5rem 0;text-align:center;color:#888;font-size:13px}
+.size-compare-row{display:flex;align-items:center;gap:10px;margin-top:8px}
+.size-bar-bg{flex:1;height:6px;background:#e8e8e0;border-radius:3px;overflow:hidden}
+.size-bar-fill{height:100%;border-radius:3px;background:#bbb}
+.hint{font-size:11px;color:#999;margin-top:4px}
+mark{background:#FFF3CD;color:#856404;border-radius:2px;padding:0 2px}
+.db-status{font-size:11px;color:#aaa;margin-top:6px}
+.db-status.ok{color:#2e7d32}
+.db-status.err{color:#c62828}
+.loading{display:inline-block;font-size:12px;color:#999;padding:1rem 0}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>채용 공고 히든 시그널 분석기</h1>
+    <p>잡플래닛 리뷰에 숨겨진 부정 신호를 탐지하고, 채용 공고와 실제 업무 간 괴리를 정량적으로 분석합니다.<br>본 도구는 경희대학교 소프트웨어융합학과 응용데이터분석 텀프로젝트 연구 결과물입니다.</p>
+    <div id="db-status" class="db-status">Firebase 연결 중...</div>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('db')" id="tab-db">DB 회사 검색</button>
+      <button class="tab" onclick="switchTab('manual')" id="tab-manual">리뷰 직접 입력</button>
+    </div>
+
+    <div id="pane-db">
+      <div class="search-row">
+        <input type="text" id="search-input" placeholder="회사명 검색 (예: 더스윙, 핀다, 당근서비스...)" oninput="onSearch(this.value)" onkeydown="if(event.key==='Enter')selectFirst()">
+        <button class="primary" onclick="selectFirst()">분석 →</button>
+      </div>
+      <ul class="company-list" id="company-list" style="display:none"></ul>
+      <div style="font-size:12px;color:#999">기본 DB: 49개 회사 · 점핏 공고 87건 · 잡플래닛 리뷰 2,361건 기반</div>
+    </div>
+
+    <div id="pane-manual" style="display:none">
+      <input type="text" id="manual-name" placeholder="회사명" style="margin-bottom:8px">
+      <textarea id="manual-review" placeholder="잡플래닛 리뷰 텍스트를 붙여넣으세요 (장점·단점·경영진에게 바라는 점 포함)" style="height:110px;margin-bottom:8px"></textarea>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <input type="number" id="manual-rating" placeholder="종합 평점 (예: 3.2)" step="0.1" min="1" max="5" style="width:180px">
+        <select id="manual-size">
+          <option value="">회사 규모 선택</option>
+          <option value="대기업/중견">대기업/중견 (200명+)</option>
+          <option value="중소기업">중소기업 (50~199명)</option>
+          <option value="스타트업">스타트업 (50명 미만)</option>
+        </select>
+      </div>
+      <button class="primary" onclick="analyzeManual()" style="width:100%">분석 및 DB 저장 →</button>
+      <div class="hint" style="margin-top:6px">* 분석 결과는 Firebase DB에 저장되어 모든 사용자와 공유됩니다.</div>
+    </div>
+  </div>
+
+  <div id="result-area" style="display:none"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBoOqJwVfIARdWTWA6ZbV4MxNDGPDQ3Y00",
+  authDomain: "hidden-signal-b082c.firebaseapp.com",
+  projectId: "hidden-signal-b082c",
+  storageBucket: "hidden-signal-b082c.appspot.com",
+  messagingSenderId: "hidden-signal-b082c",
+  appId: "hidden-signal-b082c"
+};
+
+const app = initializeApp(firebaseConfig);
+const firestore = getFirestore(app);
+
+const INITIAL_DB={"companies":{"골든플래닛":{"company_name":"골든플래닛","size_category":"중소기업","overall_rating":2.6,"employee_count":150.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":0.0,"조직분위기":4.9,"평가이탈":1.78},"total_score":6.68,"highlight":["직무에 대한 전문성을 키우기 어려우며, 아이템이 중구난방으로 바뀜 타겟으로 하는 아이템 하나를 도메인을 정해서 제대로 시작하고 이후 도메인과 아이템을 확장시키는 것이 좋아보임","직무에 대한 전문성을 키우기 어려우며, 아이템이 중구난방으로 바뀜 타겟으로 하는 아이템 하나를 도메인을 정해서 제대로 시작하고 이후 도메인과 아이템을 확장시키는 것이 좋아보임 스낵바운영","당장의 매출도 중요하지만 멀리 내다보고 인력에 투자했으면 합니다"]},"duty_similarity":{"similarity":0.0,"only_in_job":["있도록","2.","구조화하여,","리스크","책임급","부서","비즈니스","시스템을","명확히","완료"],"only_in_review":[]}},"네비웍스":{"company_name":"네비웍스","size_category":"중소기업","overall_rating":2.3,"employee_count":130.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":4.53,"조직분위기":5.36,"평가이탈":10.31},"total_score":20.2,"highlight":["사옥을 보유하고있어 같은건물에 회사 직원들 밖에없고 아침제공 및 근무시간중 마사지 제공 포괄임금제 언제 어디로 갈지모르는 파견직군 사내 정치싸움 사업 확장도 좋지만 주니어들에게 좀더 신뢰를 줄수있었으면 좋겠습니다","신고하기 사옥을 보유하고있어 같은건물에 회사 직원들 밖에없고 아침제공 및 근무시간중 마사지 제공 포괄임금제 언제 어디로 갈지모르는 파견직군 사내 정치싸움 사업 확장도 좋지만 주니어들에게 좀더 신뢰를 줄수있었으면 좋겠습니다","더 보기 사옥을 보유하고있어 같은건물에 회사 직원들 밖에없고 아침제공 및 근무시간중 마사지 제공 포괄임금제 언제 어디로 갈지모르는 파견직군 사내 정치싸움 사업 확장도 좋지만 주니어들에게 좀더 신뢰를 줄수있었으면 좋겠습니다 오후시간 헬스케어 (안마) 받을 수 있음"]},"duty_similarity":{"similarity":0.0548,"only_in_job":["Java,","서비스","TypeScript","어플리케이션","마이그레이션","불출","MySQL","CBT","시뮬레이터","RS-422"],"only_in_review":["야근","낮다"]}},"넥서스커뮤니티":{"company_name":"넥서스커뮤니티","size_category":"중소기업","overall_rating":2.8,"employee_count":96.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":6.8,"조직분위기":9.16,"평가이탈":9.16},"total_score":25.12,"highlight":["AI로 대부분의 인력이 대체될 수 있다고 믿는 몇몇 관리자","AI가 모든 인력을 대체할 수 있다고 생각하는 것처럼 꼭 AI 전환에 성공하셔서 잘 되길 바랍니다"]},"duty_similarity":{"similarity":0.0055,"only_in_job":["고도화","검토","API","가이드","서비스","아키텍처","플랫폼","수립","자문","표준"],"only_in_review":["인력"]}},"녹십자홀딩스":{"company_name":"녹십자홀딩스","size_category":"중소기업","overall_rating":3.4,"employee_count":163.0,"industry":"의료/제약/복지","hidden_signal":{"score_by_cat":{"노동강도":2.13,"조직분위기":5.84,"평가이탈":2.13},"total_score":10.1,"highlight":["통근버스 운행 어린이날 행사에 가족 초청 가능 추석에 따라 옮겨지는 창립기념일 역에서 회사까지 도보 이십분 눈치보는 야근 있음 주차장 줄어들면 주차 감당 될지 모르겠음 별로 통근버스 운행 어린이날 행사에 가족 초청 가능 추석에 따라 옮겨지는 창립기념일 역에서 회사까지 도보 이십분 눈치보는 야근 있음 주차장 줄어들면 주차 감당 될지 모르겠음 별로 통근버스 운행 어린이날 행사에 가족 초청 가능 추석에 따라 옮겨지는 창립기념일 역에서 회사까지 도보 이십분 눈치보는 야근 있음 주차장 줄어들면 주차 감당 될지 모르겠음 별로 통근버스 운행 어린이날 행사에 가족 초청 가능 추석에 따라 옮겨지는 창립기념일 역에서 회사까지 도보 이십분 눈치보는 야근 있음 주차장 줄어들면 주차 감당 될지 모르겠음 별로 역시 부바부가있겠지만 대체로 워라밸은 잘지켜지는 편입니다","워라밸 좋음 연봉이 적고 진급과 평가에 대해 업무능력보다 정치질이 크게 반영함 IT에 대한 투자와 연봉인상이 필요함","앞으로 오를 가능성이 없어보임 직원들의 복지 및 연봉에 대해 조금 더 신경써주세요 본인일에만 집중하면 아무 눈치 안보고 회사 다닐수 있다 과장이 너무 많다"]},"duty_similarity":{"similarity":0.0,"only_in_job":["관리","도입이","인프라","기존","Workflow,","활용한","프로세스","NoSQL","재설계","SQL"],"only_in_review":[]}},"누가의료기":{"company_name":"누가의료기","size_category":"중소기업","overall_rating":2.1,"employee_count":151.0,"industry":"제조/화학","hidden_signal":{"score_by_cat":{"노동강도":2.98,"조직분위기":5.59,"평가이탈":10.06},"total_score":18.63,"highlight":["그렇지 않고서 발전하기 힘들어요 규모가 있어 월급이 밀리지 않고 직원분들이","연월차에 대한 눈치 별로 없음 3","월급 잘나오고 수당도 잘 나왔음"]},"duty_similarity":null},"뉴온":{"company_name":"뉴온","size_category":"중소기업","overall_rating":2.5,"employee_count":76.0,"industry":"제조/화학","hidden_signal":{"score_by_cat":{"노동강도":16.41,"조직분위기":6.46,"평가이탈":6.46},"total_score":29.33,"highlight":["내일만 하면되고 야근 없는 분위기 팀바팀 장기근속자 없음 앞으로 회사 지속이 될까 라는 의문이 있다","열정적인 직원없는듯 월급루팡 많은데 경영진은 모르는듯 하다"]},"duty_similarity":{"similarity":0.0,"only_in_job":["등의","프로그램의","매출정산","업데이트/유지/보수.","WMS","ㆍ기타","프로그램","분석/협업.","사내에","개발완료"],"only_in_review":[]}},"다우기술":{"company_name":"다우기술","size_category":"대기업/중견","overall_rating":3.4,"employee_count":727.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":2.07,"조직분위기":0.0,"평가이탈":6.72},"total_score":8.79,"highlight":["일의 양이 적지는 않으나 매일 야근해야 할 정도는 아니고 금전적 보상이 괜찮은편 복지제도가 많이 없고 휴가를 자유롭게 쓰기 비교적 어려운 측면 복지제도나 자유로운 연차 휴가 사용 문화","신고하기 일의 양이 적지는 않으나 매일 야근해야 할 정도는 아니고 금전적 보상이 괜찮은편 복지제도가 많이 없고 휴가를 자유롭게 쓰기 비교적 어려운 측면 복지제도나 자유로운 연차 휴가 사용 문화","더 보기 일의 양이 적지는 않으나 매일 야근해야 할 정도는 아니고 금전적 보상이 괜찮은편 복지제도가 많이 없고 휴가를 자유롭게 쓰기 비교적 어려운 측면 복지제도나 자유로운 연차 휴가 사용 문화 사람들이 대부분 착하고 워라벨을 적당히 챙길 수 있는 분의기 포괄임금, 낮은 사업 성장성, 개인 커리어 성장이 어려움 사업 성장성이 낮아지는 상황임에도 변화하려는 모습이 느껴지지 않음"]},"duty_similarity":{"similarity":0.0125,"only_in_job":["'다우기술'의","서비스","HTML,","개발/운영을","공유","[코드","케이스","단위","리딩","Playwright,"],"only_in_review":["제대로"]}},"당근서비스":{"company_name":"당근서비스","size_category":"중소기업","overall_rating":2.3,"employee_count":120.0,"industry":"서비스업","hidden_signal":{"score_by_cat":{"노동강도":3.58,"조직분위기":2.15,"평가이탈":3.58},"total_score":9.31,"highlight":["한달도 안돼 당일 퇴사하는 직원도 많음 남자 관리자가 잘해줘도 여자직원이 당일퇴사","3달 채우려다가 남자 관리자 때문에 퇴사함 먼슬리 미팅이나 자리 이동도 퇴근전에 해주세요 아니면 초과근무로 처리하던가요","인원은 많은데 항상 부족했어요^^ 워라밸, 구디에서 가까움, 당근에서 온사람들이 뭔가 바꿔보려는게 보임, 커피머신 월급"]},"duty_similarity":{"similarity":0.0136,"only_in_job":["있도록","기존","설계하고","체크인,","따라","업무를","만들어서","산출에","지원하는","시스템을"],"only_in_review":[]}},"더스윙":{"company_name":"더스윙","size_category":"중소기업","overall_rating":2.4,"employee_count":110.0,"industry":"서비스업","hidden_signal":{"score_by_cat":{"노동강도":9.73,"조직분위기":18.54,"평가이탈":12.77},"total_score":41.04,"highlight":["OOO 몇시 어디 출근했습니다 보고해야하고, 퇴근시에도 마찬가지 만약 일찍 퇴근하면 쿠사리먹음 무려 회사대표에게","퇴사한 사람들 퇴사자 리뷰함","왜 퇴사했고 어떤 업무를 했고 어떤 사람이었고 라고 대표가 아침회의때 전 임직원 앞에서 직접 얘기를 함"]},"duty_similarity":{"similarity":0.0374,"only_in_job":["발생하는","유저,","설계하고","운영과","수행합니다.","고려하여,","준수(ISMS)를","[직무","장애를","하나의"],"only_in_review":["제대로"]}},"델레오코리아":{"company_name":"델레오코리아","size_category":"중소기업","overall_rating":2.3,"employee_count":63.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":2.6,"조직분위기":6.65,"평가이탈":9.25},"total_score":18.5,"highlight":["야근시 택시, 간식 지원해줌","캐시카우는 뭔지 모르겠으나 월급은 안 밀리고 줌","팀별로 업무강도가 너무 달라서 누군 꿀빨고 누군 개처럼 일해야 함"]},"duty_similarity":{"similarity":0.0083,"only_in_job":["https://stackshare.io/deleo/deleokorea","e-Commerce","REST","연동","RESTful","서비스","3rd-Party","(Kafka,","API","분산"],"only_in_review":["제대로"]}},"도프텍":{"company_name":"도프텍","size_category":"스타트업","overall_rating":3.5,"employee_count":40.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":1.56,"조직분위기":19.71,"평가이탈":6.22},"total_score":27.49,"highlight":["커리어적 발전하려면 따로 개인이 계발해야할듯 대표님 정말 좋은분이었던 기억이 있음","눈치 볼일 없이 빠른 퇴근"]},"duty_similarity":{"similarity":0.0056,"only_in_job":["배포","프로세스","활용한","텍스트,","체계","배관/케이블","로직","기능","OCR/VLM/멀티모달","구축,"],"only_in_review":["제대로"]}},"동아사이언스":{"company_name":"동아사이언스","size_category":"중소기업","overall_rating":2.6,"employee_count":108.0,"industry":"미디어/디자인","hidden_signal":{"score_by_cat":{"노동강도":2.1,"조직분위기":2.1,"평가이탈":2.79},"total_score":6.99,"highlight":["느슨한분위기에 그런저럭 다닐수있음 퇴직한지 꽤 됐음에도 여자 과장이 괴롭히고 정치질했던 충격이 큼","콘텐츠 활용이 아쉽다"]},"duty_similarity":{"similarity":0.0,"only_in_job":["React","품질","개발","프론트엔드","개선(Next.js,","등)"],"only_in_review":[]}},"디아이":{"company_name":"디아이","size_category":"대기업/중견","overall_rating":2.2,"employee_count":273.0,"industry":"제조/화학","hidden_signal":{"score_by_cat":{"노동강도":7.43,"조직분위기":4.95,"평가이탈":6.19},"total_score":18.57,"highlight":["야근이 많고, 주말 근무를 요구 할 때가 많다","특정 인력에게 업무가 집중되는 경향이 있음","인력 운영 및 업무 분배에 대한 개선"]},"duty_similarity":null},"디어유":{"company_name":"디어유","size_category":"중소기업","overall_rating":2.8,"employee_count":78.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":2.49,"조직분위기":4.16,"평가이탈":9.98},"total_score":16.63,"highlight":["사내 카페 간식바 이용 경영진의 의사결정 어려움 한계","신고하기 야근이 많지 않음"]},"duty_similarity":{"similarity":0.0118,"only_in_job":["CCPA","리스크","구축/운영","내부관리계획,","식별","정보자산","진단","개인정보","프로세스에","ㆍ보안"],"only_in_review":[]}},"로그프레소":{"company_name":"로그프레소","size_category":"중소기업","overall_rating":4.5,"employee_count":80.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":2.78,"조직분위기":12.06,"평가이탈":3.71},"total_score":18.55,"highlight":["웰컴키트를 받으면서 회사에 소속감을 충분히 받았으며 지원을 잘해준다는 느낌을 받음 내부 인수인계의 부족으로 인해 업무 적응하는데에 큰 어려움이 있긴 했음 앞으로도 발전하는 모습을 응원하겠습니다 화이팅","신고하기 웰컴키트를 받으면서 회사에 소속감을 충분히 받았으며 지원을 잘해준다는 느낌을 받음 내부 인수인계의 부족으로 인해 업무 적응하는데에 큰 어려움이 있긴 했음 앞으로도 발전하는 모습을 응원하겠습니다 화이팅","더 보기 웰컴키트를 받으면서 회사에 소속감을 충분히 받았으며 지원을 잘해준다는 느낌을 받음 내부 인수인계의 부족으로 인해 업무 적응하는데에 큰 어려움이 있긴 했음 앞으로도 발전하는 모습을 응원하겠습니다 화이팅"]},"duty_similarity":{"similarity":0.0,"only_in_job":["ㆍ시계열","관리","배포","활용한","기획","ㆍAI/머신러닝","ㆍ대규모","등)에서의","환경(AWS,","데이터셋을"],"only_in_review":[]}},"리본즈":{"company_name":"리본즈","size_category":"중소기업","overall_rating":2.8,"employee_count":84.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":0.94,"조직분위기":1.41,"평가이탈":12.71},"total_score":15.06,"highlight":["간식바도 생기고 인테리어도 새로했고 역 바로 앞이라 굉장히 만족함(퇴사 이후 식대 안주고 간식바 없애고 이사했다고 들음) 중소 기업 특성상 매뉴얼이 명확히 없고 전임자나 사수에게 일을 배워야하는데 사수가 갑자기 타팀으로 간다던지 전임자가 인수인께 다 안해주고 간다던지 해서 알아서 일을 배우고 익혀가야하는 상황이 생김","현재 이 명품산업 자체가 굉장히 죽고있는거같은데 일반 구매자들은 특정 사이트에서 산다기보다 비교 후 젤 싼대서 구매하는데 입점업체들 이윤에 리본즈 이윤까지 남기다보니 판매가가 별로 안쌈"]},"duty_similarity":{"similarity":0.0,"only_in_job":["제품화를","OKR","사용성을","소속으로","서비스","(스토리보드,","파악하고","따라","개발팀","논의해요."],"only_in_review":[]}},"메디트":{"company_name":"메디트","size_category":"대기업/중견","overall_rating":3.1,"employee_count":320.0,"industry":"의료/제약/복지","hidden_signal":{"score_by_cat":{"노동강도":1.52,"조직분위기":2.03,"평가이탈":0.0},"total_score":3.55,"highlight":["사내정치 무능력한 리더 인성부족한 직원 그들만의 집단 본인들 밥줄만 신경이 쓰여 회사 발전에 도움이없다","사내정치 무능력한 리더 인성부족한 직원 그들만의 집단 본인들 밥줄만 신경이 쓰여 회사 발전에 도움이없다 자율 출퇴근이나 복지포인트 사용, 매년 건강검진등은 괜찮은 부분 회사의 운영같은 부분이 투명하지 않고 임원들의 재량으로 특정 인원에 특혜들이 있다고 느껴지게 하는 부분이 분위기를 좋지 않게 하는듯 빠른 소통을 이야기 하지만 결국 소통 뿐이고 개선이나 변화가 없는건 의미 없다고 느낍니다","일부 인원들만 바쁘다 맨날 새로운 뭔가 할라고 하는데 좀 더 고민좀 했으면 좋겠다"]},"duty_similarity":{"similarity":0.0,"only_in_job":["글로벌","서비스","개발자","Redshift","리더십","ㆍAWS","수립","ㆍ대규모","클라우드","방향성"],"only_in_review":[]}},"모비루스":{"company_name":"모비루스","size_category":"중소기업","overall_rating":3.3,"employee_count":50.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":14.39,"조직분위기":5.83,"평가이탈":7.54},"total_score":27.76,"highlight":["적은 야근(높은 부바부)","근처 식당의 비싼 물가, 교통 최악으로 자차 어려움"]},"duty_similarity":{"similarity":0.0708,"only_in_job":["device","소프트웨어","라이다/비전을","C/C++","AI","On","솔루션","자율주행/Safety","이용한","기반"],"only_in_review":[]}},"무하유":{"company_name":"무하유","size_category":"스타트업","overall_rating":3.0,"employee_count":41.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":6.39,"조직분위기":5.04,"평가이탈":5.71},"total_score":17.14,"highlight":["점심 (식권 대장) 지원 밖에 없는데 30자 채워야 하네요 -특정인의 정치질, 수직적인 문화","신고하기 점심 (식권 대장) 지원 밖에 없는데 30자 채워야 하네요 -특정인의 정치질, 수직적인 문화","퇴사 인력이 많음 왜 많은지는 모르겠음 한달에 한명은 퇴사하는 기분"]},"duty_similarity":{"similarity":0.0454,"only_in_job":["모니터링을","프로세스를","대응과","기획","수행합니다.","정책서,","대응","보조하며,","커뮤니케이션을","툴을"],"only_in_review":["부족하다"]}},"베어로보틱스코리아":{"company_name":"베어로보틱스코리아","size_category":"중소기업","overall_rating":3.1,"employee_count":160.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":0.0,"조직분위기":3.68,"평가이탈":3.32},"total_score":7.0,"highlight":["- 제품에 대한 사내 교육을 실시함 - 팀이 많아 어떤 업무가 일어나는지 알기 다소 어려움 따로 - 새로운 경험과 도약을 하게 됨","- 제품에 대한 사내 교육을 실시함 - 팀이 많아 어떤 업무가 일어나는지 알기 다소 어려움 따로 실리콘밸리 개발문화를 일부 차용하고 있고, 훌륭한 인력들이 포진되어 있다 - 불투명한 평가로 인하여, 자기맘에 드는 사람 위주로 진급","신고하기 실리콘밸리 개발문화를 일부 차용하고 있고, 훌륭한 인력들이 포진되어 있다 - 불투명한 평가로 인하여, 자기맘에 드는 사람 위주로 진급"]},"duty_similarity":{"similarity":0.0327,"only_in_job":["기존","활용한","Manager,","사용자","유지보수","프론트엔드","자동화","트렌드를","기능","구축"],"only_in_review":["어려움"]}},"부스터스":{"company_name":"부스터스","size_category":"중소기업","overall_rating":2.9,"employee_count":140.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":0.98,"조직분위기":4.41,"평가이탈":3.92},"total_score":9.31,"highlight":["퇴사율을 보면 자진 퇴사는 거의 없고 대부분 조직에 해를 끼치거나 부정적인 영향을 줘서 짤린 사람들입니다","단독 대표님 체제가 되고 많이 개선되었는데, 내년에는 좀 더 성장하고 구성원들이 비전을 더욱 느낄 수 있는 회사가 되길 바랍니다"]},"duty_similarity":{"similarity":0.0049,"only_in_job":["있도록","Vue.js","수행합니다.","개발자가","비즈니스","컨벤션,","트래픽","이중화","Availability","기술적"],"only_in_review":["정치"]}},"비바이노베이션":{"company_name":"비바이노베이션","size_category":"스타트업","overall_rating":3.0,"employee_count":40.0,"industry":"서비스업","hidden_signal":{"score_by_cat":{"노동강도":0.66,"조직분위기":3.64,"평가이탈":6.62},"total_score":10.92,"highlight":["이러한 구성원들의 노력이 헛되지 않도록, 실무자들의 피드백이 묻히지 않고 제대로 반영될 수 있기를 바랍니다","경영진이 현장에서 직접 경험을 쌓은 적이 적다 보니 직원들의 고민이나 어려움을 완전히 이해하는 데는 한계가 있을 수 있습니다","젊은 경영자 특유의 자신감이 때때로 지나치게 비쳐 보이기도 하고, 공감하는 데 어려움이 있을 때가 있습니다"]},"duty_similarity":{"similarity":0.0,"only_in_job":["모바일","서비스","앱(React","착한의사","웹,","개발","Native)"],"only_in_review":["제대로"]}},"비즈톡":{"company_name":"비즈톡","size_category":"스타트업","overall_rating":2.3,"employee_count":22.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":2.13,"조직분위기":6.4,"평가이탈":13.11},"total_score":21.64,"highlight":[") 고연차의 인력을 제대로 면접좀 보고 뽑으세요",") 고연차의 인력을 제대로 면접좀 보고 뽑으세요 워라밸이 잘 지켜지는 것 같아요","부장급 퇴사 인원을 기존 인원 + 신입을 뽑아 대체"]},"duty_similarity":{"similarity":0.0457,"only_in_job":["모니터링을","비즈메시지(알림톡/친구톡)","프론트엔드","스마트메시지)","챗봇","지속적인","서버","네이버","개선","시스템"],"only_in_review":["퇴사"]}},"세미파이브":{"company_name":"세미파이브","size_category":"대기업/중견","overall_rating":3.8,"employee_count":260.0,"industry":"제조/화학","hidden_signal":{"score_by_cat":{"노동강도":1.46,"조직분위기":11.19,"평가이탈":4.38},"total_score":17.03,"highlight":["유연한 출퇴근 시간, 성장할 수 있는 팀 분위기, 복지 제도 확대 (점심 식대 지원,  야근시 저녁 식대, 택시비 지원, 월 주차비 지원, 매년 건강 검진 무료 지원, 스낵바) 낮은 연봉 인상률, 여러 회사가 합병되어 팀마다 분위기 차이가 있음, 업무 쏠림이 종종 있음 연봉 인상률을 높여주시면 좋겠습니다","신고하기 유연한 출퇴근 시간, 성장할 수 있는 팀 분위기, 복지 제도 확대 (점심 식대 지원,  야근시 저녁 식대, 택시비 지원, 월 주차비 지원, 매년 건강 검진 무료 지원, 스낵바) 낮은 연봉 인상률, 여러 회사가 합병되어 팀마다 분위기 차이가 있음, 업무 쏠림이 종종 있음 연봉 인상률을 높여주시면 좋겠습니다","텃세가 심함 합리적이고 모두가 공감할만한 조직운영을 해 주세요 디자인 하우스 개념보다 더 확장된 플랫폼을 개발하는 것만으로 비젼이 좋다고 생각 불평불만이 많은 사람이 많고 소통이 되는듯 안되는듯 스타트업위 느낌이 없음 괜찮은 인력이 들어와도 관리가 안되어 퇴사하는 분위기 같아서 안타까움"]},"duty_similarity":{"similarity":0.0,"only_in_job":["Job","구현에","부서와의","잠재적인","기여하는","수행합니다.","수립","Simulation","설계된","Script"],"only_in_review":[]}},"센트비":{"company_name":"센트비","size_category":"중소기업","overall_rating":2.8,"employee_count":164.0,"industry":"은행/금융업","hidden_signal":{"score_by_cat":{"노동강도":1.71,"조직분위기":1.71,"평가이탈":4.26},"total_score":7.68,"highlight":["인재영입에 자원을 아끼지 않아 인재밀도가 높아지고 있었지만 환율의 여파로 지금은 자본력이 안좋아졌다고 알고있음 인재영입을 위해 큰돈을 쓰고있지만 검증할 시스템이나 사람이 부족함 쉽지 않겠지만 다시 돌파구를 찾아서 회복되었으면 좋겠습니다 유연한 출퇴근, 열린 분위기, 무제한 자기개발 지원금 180만원 투자금이 바닥나며 그나마 적은 겉으로만 열린 문화를 지향하지말고 실무자들을 제대로 평가할 수 있는 시스템을 구축하기를 바람","신고하기 유연한 출퇴근, 열린 분위기, 무제한 자기개발 지원금 180만원 투자금이 바닥나며 그나마 적은 겉으로만 열린 문화를 지향하지말고 실무자들을 제대로 평가할 수 있는 시스템을 구축하기를 바람","경쟁사 대비 강점이 존재하지 않는 멈춰있는 제품 매번 재정의 어려움만 직원들테 호소하지 말고 성장을 고민하시길"]},"duty_similarity":{"similarity":0.0384,"only_in_job":["고민하고","발전시키고","공유","합류","도메인","입장에서","지원하는","Head","만들기","동료와"],"only_in_review":[]}},"신보":{"company_name":"신보","size_category":"중소기업","overall_rating":2.7,"employee_count":125.0,"industry":"건설업","hidden_signal":{"score_by_cat":{"노동강도":1.95,"조직분위기":9.28,"평가이탈":6.35},"total_score":17.58,"highlight":["일단 다들 챙겨줄려고 하고 사람은 좋음 맨위 빼고 워라벨이 괜찮은편이고 월급 급여가 좋았다 그래서 이직하기어려움 술을 너무많이마셔서 간이 남아나질 안ㄹ음 건강을 해칠수도 고인물들 좀 나가고 물갈이 되어야할거같아요","신고하기 워라벨이 괜찮은편이고 월급 급여가 좋았다 그래서 이직하기어려움 술을 너무많이마셔서 간이 남아나질 안ㄹ음 건강을 해칠수도 고인물들 좀 나가고 물갈이 되어야할거같아요","더 보기 워라벨이 괜찮은편이고 월급 급여가 좋았다 그래서 이직하기어려움 술을 너무많이마셔서 간이 남아나질 안ㄹ음 건강을 해칠수도 고인물들 좀 나가고 물갈이 되어야할거같아요 워라밸 대부분 유지"]},"duty_similarity":{"similarity":0.0,"only_in_job":["Tomcat","이상","Oracle,","전반적인","유지보수","당사의","미들웨어","MS-SQL","기반","설계"],"only_in_review":[]}},"씨어스테크놀로지":{"company_name":"씨어스테크놀로지","size_category":"중소기업","overall_rating":3.5,"employee_count":160.0,"industry":"제조/화학","hidden_signal":{"score_by_cat":{"노동강도":2.64,"조직분위기":13.66,"평가이탈":6.61},"total_score":22.91,"highlight":["월급 잘 나오고 회사 환경은 깔끔하고 좋음","신고하기 월급 잘 나오고 회사 환경은 깔끔하고 좋음","승진과 진급에 차이가 없음 회사가 성장한만큼 성과상여금, 인센티브 지급 필요 대표님 마인드가 좋으시고 바로 역 앞이라 출퇴근하기 수월합니다"]},"duty_similarity":{"similarity":0.0,"only_in_job":["인프라","서비스","분석을","클라우드","데이터(Health/Biometric","Spring","확보","기반","구축","설계"],"only_in_review":[]}},"이글루코퍼레이션":{"company_name":"이글루코퍼레이션","size_category":"대기업/중견","overall_rating":2.7,"employee_count":1020.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":1.4,"조직분위기":7.01,"평가이탈":12.61},"total_score":21.02,"highlight":["분명 본사 지사가 바쁘기는 하나 파견지의 인력부분등을 조금만 더 챙겨줬으면","월급이 제때 빨리 들어오고 연봉 상승률이 괜찮습니다","신고하기 월급이 제때 빨리 들어오고 연봉 상승률이 괜찮습니다"]},"duty_similarity":{"similarity":0.0168,"only_in_job":["프로세스","백엔드","관제시스템(비즈니스","Agent","엔진","워크플로우)","Web","개발","솔루션","탐지/분석"],"only_in_review":[]}},"이너버스":{"company_name":"이너버스","size_category":"스타트업","overall_rating":2.2,"employee_count":31.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":2.6,"조직분위기":3.31,"평가이탈":9.69},"total_score":15.6,"highlight":["대표님이 사업 발굴을 잘해서 회사가 오래 존속했으면 한다","쉽게 입사한만큼 급여도 낮고 배울점이 별로 없다"]},"duty_similarity":{"similarity":0.0131,"only_in_job":["관리","또는","전국","자체","ㆍCore","SW","장애처리","Vue.js","SPA","경험"],"only_in_review":["별로"]}},"이우소프트":{"company_name":"이우소프트","size_category":"스타트업","overall_rating":2.3,"employee_count":40.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":2.22,"조직분위기":10.74,"평가이탈":4.81},"total_score":17.77,"highlight":["신임 대표님 변화 의지가 있으신거 같고 능력도 있어보여서 기대해보고 싶습니다","자기 역할도 제대로 모르고 할일이 뭔지도 모르니 할일이 없어서 남 하는거 방해하고 본인이 한 일로","위에서 시키는거도 제대로 못해서  왜곡해서 전달함 어디 갈데없는 사람들만 뽑는건지"]},"duty_similarity":{"similarity":0.0,"only_in_job":["관리","글로벌","서비스","​부서와","​개선","기반","설계","고객","운영","​지원"],"only_in_review":["인력"]}},"인피닉":{"company_name":"인피닉","size_category":"대기업/중견","overall_rating":2.2,"employee_count":336.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":6.03,"조직분위기":6.46,"평가이탈":3.87},"total_score":16.36,"highlight":["야근을 거의 안 했고 항상 칼퇴하고 사람 스트레스가 없었다 내 미래가 불투명했다","신고하기 회식/야근에 대한 강요가 없고, 자유로운 분위기여서 좋았습니다"]},"duty_similarity":{"similarity":0.0092,"only_in_job":["관리","수행","해결을","프로세스","대응","기획안","Case","심사","GS","내부"],"only_in_review":["야근"]}},"쥬비스다이어트":{"company_name":"쥬비스다이어트","size_category":"대기업/중견","overall_rating":2.9,"employee_count":450.0,"industry":"서비스업","hidden_signal":{"score_by_cat":{"노동강도":0.0,"조직분위기":9.58,"평가이탈":4.1},"total_score":13.68,"highlight":["여자들이 모여 정치질을 하고 정신을 깍아먹어요","새로운 인력뽑아도 익숙해질때까지 내가해야되요"]},"duty_similarity":{"similarity":0.0,"only_in_job":["수행","기획","사용자","일정","전반적인","리스크","참여","시스템)의","내부","인사이트"],"only_in_review":["인력","별로"]}},"코보시스":{"company_name":"코보시스","size_category":"스타트업","overall_rating":3.1,"employee_count":18.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":3.05,"조직분위기":4.35,"평가이탈":6.09},"total_score":13.49,"highlight":["월급이 따박따박 나온다","비젼제시를 제대로 전달 못한다"]},"duty_similarity":{"similarity":0.0016,"only_in_job":["freezed,","버전","로직","[코드","주문","minSdk/targetSdk","구조","방지","[제품","네트워크"],"only_in_review":[]}},"코어시큐리티":{"company_name":"코어시큐리티","size_category":"스타트업","overall_rating":2.4,"employee_count":49.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":9.37,"조직분위기":1.34,"평가이탈":10.7},"total_score":21.41,"highlight":["이거저거 다하고 바쁘다보니까 개인적으로 공부할 시간이 부족하고 결국 전문성이 떨어지게됨","너무 다 하게 되어서 전문성을 키우기는 어려움","신입뽑고 퇴사하고 신입 뽑고 퇴사하고 반복"]},"duty_similarity":{"similarity":0.0547,"only_in_job":["훈련","ㆍ교육훈련","방어","위협","교육","연구개발,","수행,","POC","콘텐츠"],"only_in_review":[]}},"쿼리시스템즈":{"company_name":"쿼리시스템즈","size_category":"스타트업","overall_rating":3.2,"employee_count":5.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":0.0,"조직분위기":10.69,"평가이탈":8.11},"total_score":18.8,"highlight":["분기별로 다양한 일을 할 수 있음","신고하기 분기별로 다양한 일을 할 수 있음","더 보기 분기별로 다양한 일을 할 수 있음"]},"duty_similarity":{"similarity":0.0,"only_in_job":["자사","네트워크","기술","솔루션","SIEM/SOAR솔루션","구축","보안"],"only_in_review":[]}},"큐픽스":{"company_name":"큐픽스","size_category":"중소기업","overall_rating":3.9,"employee_count":92.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":4.27,"조직분위기":2.56,"평가이탈":1.71},"total_score":8.54,"highlight":["이다 20만원 식대 나쁘지 않다 부바부인데 특정 부서가 정말 별로다","신고하기 이다 20만원 식대 나쁘지 않다 부바부인데 특정 부서가 정말 별로다","신고하기 재택, 연차 자율적으로 사용 가능, 점심시간 1시간 30분 부바부인데 특정 부서가 정말 별로다"]},"duty_similarity":{"similarity":0.0057,"only_in_job":["발생하는","서비스","대응:","Rails","Planner,","통합:","이용한","2(심화","기업이","시스템:"],"only_in_review":[]}},"클로봇":{"company_name":"클로봇","size_category":"중소기업","overall_rating":3.0,"employee_count":145.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":1.52,"조직분위기":4.57,"평가이탈":1.14},"total_score":7.23,"highlight":["부서별로 분위기가 다르나, 대부분 꽤 많은 자유도가 있음","신고하기 부서별로 분위기가 다르나, 대부분 꽤 많은 자유도가 있음","워라밸 좋음(팀바팀) 야근수당이 있었으나 사라짐(있긴 하지만 거의 못받는 구조로 바뀜)"]},"duty_similarity":{"similarity":0.0,"only_in_job":["특성에","계획","수행","관리","서비스","프로세스","수립","맞는","체계","활동"],"only_in_review":[]}},"테크랩스":{"company_name":"테크랩스","size_category":"대기업/중견","overall_rating":2.4,"employee_count":396.0,"industry":"미디어/디자인","hidden_signal":{"score_by_cat":{"노동강도":1.81,"조직분위기":6.34,"평가이탈":4.08},"total_score":12.23,"highlight":["직원들을 위한 복지를 조금 더 늘려주세요 강남역 인근, 주변 맛집 많음, 야근 없음, 팀 분위기 좋음 발전적인 느낌은 없음, 병의원 마케팅 특성 상 일이 재미없음 제 입장에선 딱히 없었는데 중간 직원들 말에 귀 기울여주심 좋을 것 같아요","신고하기 강남역 인근, 주변 맛집 많음, 야근 없음, 팀 분위기 좋음 발전적인 느낌은 없음, 병의원 마케팅 특성 상 일이 재미없음 제 입장에선 딱히 없었는데 중간 직원들 말에 귀 기울여주심 좋을 것 같아요","더 보기 강남역 인근, 주변 맛집 많음, 야근 없음, 팀 분위기 좋음 발전적인 느낌은 없음, 병의원 마케팅 특성 상 일이 재미없음 제 입장에선 딱히 없었는데 중간 직원들 말에 귀 기울여주심 좋을 것 같아요 워라벨이 좋습니다 이걸로 30자 채우려니 힘듭니다 아 간식도 나쁘지 않고 노트북 줍니다 일할수록 바보가되는 느낌 다들 일안하고 노는데 어떻게 매출이나는지 신기하고 9층은 점검필요합니다 임원들은 누가 일하고 누가 일안하는지 체크하셔야할듯 회식때 깍듯이 대한다고 예뻐할게아니라 돈을 버는 사람인지 아닌지 판단을 하셔야죠 없습니다 나왔으니 그냥 그렇게 사세요 매출이 점점떨어져도 정신못차리시니"]},"duty_similarity":{"similarity":0.0082,"only_in_job":["인프라","확보에","설계하고","개발하며","플랫폼을","사내","체계","기여합니다.","자동화,","전사적으로"],"only_in_review":["낮다"]}},"티시스":{"company_name":"티시스","size_category":"대기업/중견","overall_rating":2.4,"employee_count":2500.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":1.62,"조직분위기":12.39,"평가이탈":6.47},"total_score":20.48,"highlight":["이미 나온사람이라지만 남아있는 좋은사람들이 보다 편하고 즐겁게 다녔으면 좋겠음 월급재때 나오는것 외에 업무강도 낮은것뿐","정치질 말고 경영을 햇다면 이상황은 안왓을듯","신고하기 월급재때 나오는것 외에 업무강도 낮은것뿐"]},"duty_similarity":{"similarity":0.0157,"only_in_job":["관리","계획","수행","리드","전파","수준진단","수립","공유","대응","교육"],"only_in_review":[]}},"파이오링크":{"company_name":"파이오링크","size_category":"대기업/중견","overall_rating":3.3,"employee_count":410.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":3.2,"조직분위기":0.0,"평가이탈":13.32},"total_score":16.52,"highlight":["경영진 중에 너무 별로인 사람이","사내문화도 부바부 글쎄…근속년수를 늘릴 수 있도록 분발필요함 월급 밀리지 않음"]},"duty_similarity":{"similarity":0.0409,"only_in_job":["수행","2.","프로세스","소프트웨어","환경(HCI/오픈스택/K8S/Vmware)","보증(SQA)","클라우드","자동화","활동","정책"],"only_in_review":[]}},"포씨게이트":{"company_name":"포씨게이트","size_category":"중소기업","overall_rating":2.6,"employee_count":55.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":2.0,"조직분위기":3.34,"평가이탈":13.7},"total_score":19.04,"highlight":["워라벨이 좋고 외근이 많으면 자유로움 직원들은 사람들이 좋아서 일하기 좋음 월급이 너무 적고 열심히 오래 일한 사람을 높게 평가하지 않음 승진이 너무 오래걸림 직원들 복지와 월급을 많이 생각해주세요","신고하기 워라벨이 좋고 외근이 많으면 자유로움 직원들은 사람들이 좋아서 일하기 좋음 월급이 너무 적고 열심히 오래 일한 사람을 높게 평가하지 않음 승진이 너무 오래걸림 직원들 복지와 월급을 많이 생각해주세요","더 보기 워라벨이 좋고 외근이 많으면 자유로움 직원들은 사람들이 좋아서 일하기 좋음 월급이 너무 적고 열심히 오래 일한 사람을 높게 평가하지 않음 승진이 너무 오래걸림 직원들 복지와 월급을 많이 생각해주세요 자유로운 분위기, 칼퇴보장, 회식별로없음, 직원들 다 착함 급여인상이 거의 없고 고인물들이 많아요 커리어쌓기에도 별로에요 복지좀 늘려주시고 연차사용자유롭게 해주세요"]},"duty_similarity":{"similarity":0.007,"only_in_job":["관리","Linux(Ubuntu)","소속으로","배포","서비스","활용한","docker-compose를","FastAPI","프론트엔드","부서"],"only_in_review":["제대로"]}},"퓨쳐스콜레":{"company_name":"퓨쳐스콜레","size_category":"스타트업","overall_rating":2.0,"employee_count":31.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":1.86,"조직분위기":11.47,"평가이탈":1.24},"total_score":14.57,"highlight":["랜덤런치, 서울숲 인근, 자유로운 시간차, 공유오피스라 쾌적한 환경 나르시시즘 대표가 모든것을 망치고 있음","대표 자격이없는거 같아요","핵심창업자들 퇴사하는거"]},"duty_similarity":{"similarity":0.012,"only_in_job":["기술과","해결을","고민하고","기술적인","새로운","서비스","설계하고","DevOps,","클라우드","Github"],"only_in_review":[]}},"플래티어":{"company_name":"플래티어","size_category":"대기업/중견","overall_rating":3.1,"employee_count":304.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":8.23,"조직분위기":5.63,"평가이탈":4.33},"total_score":18.19,"highlight":["내부에서 제공하는 요즘회사 복지들도 있음 너무 si느낌이고 프로젝트에 투입하는 인력1인 느낌이 강함 프로젝트 나가는 직원들의 업무환경도 잘 부탁드려요","내부에서 제공하는 요즘회사 복지들도 있음 너무 si느낌이고 프로젝트에 투입하는 인력1인 느낌이 강함 프로젝트 나가는 직원들의 업무환경도 잘 부탁드려요 워라밸이 잘 지켜지는 편이며, 시차 출퇴근제로 인해 자기 시간에 맞춰서 근무할 수 있다는 점","무분별한 야근이 많음"]},"duty_similarity":{"similarity":0.0,"only_in_job":["역량","2.","서비스","버전","서빙","LLMOps)","•AI","feature","6.","구조"],"only_in_review":["야근","인력"]}},"피엠인터내셔널코리아":{"company_name":"피엠인터내셔널코리아","size_category":"중소기업","overall_rating":2.4,"employee_count":140.0,"industry":"유통/무역/운송","hidden_signal":{"score_by_cat":{"노동강도":2.84,"조직분위기":3.65,"평가이탈":4.06},"total_score":10.55,"highlight":["경영진들도 잘 알고 있을 것이라고 믿고 있고 그걸 바꾸기 위한 노력을 1도 하지 않았다는 것이 제일 아쉽다","야근 없고 복지도 지속적으로 늘어남 윗사람한테 아부 잘떨어야 인사고과 잘받음"]},"duty_similarity":{"similarity":0.0081,"only_in_job":["프로젝트,","표준의","공유","이해관계자와의","흐름,","비즈니스","식별","개인정보","실행,","최적화된"],"only_in_review":[]}},"핀다":{"company_name":"핀다","size_category":"중소기업","overall_rating":3.4,"employee_count":145.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":0.0,"조직분위기":6.67,"평가이탈":1.25},"total_score":7.92,"highlight":["주 1회 재택근무가 있다 스타트업 같지 않은 탑다운 형태, 체계없는 인사 운영방식, 지속적인 좋은 동료들의 이탈로 고인물만 남음, 장기근속하기 힘든 환경 경영진에게 역세권에 있는 사무실, 주 1회 재택근무, 무제한 제공 커피와 우유 피플팀 주도로 한 사내정치, 편파적이고 불투명한 평가와 보상 지금처럼 하셔서 얼른 망하길 바랍니다","신고하기 역세권에 있는 사무실, 주 1회 재택근무, 무제한 제공 커피와 우유 피플팀 주도로 한 사내정치, 편파적이고 불투명한 평가와 보상 지금처럼 하셔서 얼른 망하길 바랍니다","더 보기 역세권에 있는 사무실, 주 1회 재택근무, 무제한 제공 커피와 우유 피플팀 주도로 한 사내정치, 편파적이고 불투명한 평가와 보상 지금처럼 하셔서 얼른 망하길 바랍니다"]},"duty_similarity":{"similarity":0.0215,"only_in_job":["ㆍ서비스","“발견”에서","ㆍ개발","업무를","리스크","리뷰,","문화","구호가","(RBAC/ABAC","흐름에"],"only_in_review":[]}},"필라넷":{"company_name":"필라넷","size_category":"중소기업","overall_rating":2.6,"employee_count":183.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":0.0,"조직분위기":4.87,"평가이탈":10.55},"total_score":15.42,"highlight":["나머지 다 별로입니다","QA,QC가 제대로 안된다"]},"duty_similarity":{"similarity":0.0124,"only_in_job":["수행","MS-SQL을","서비스","활용한","Retrieval","(vLLM,","로직","고도화(Vector","기능","기반"],"only_in_review":["어려움"]}},"한국비즈넷":{"company_name":"한국비즈넷","size_category":"중소기업","overall_rating":2.7,"employee_count":50.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":7.38,"조직분위기":3.23,"평가이탈":6.92},"total_score":17.53,"highlight":["복지도 괜찮은편 커리어적으로 발전할 수 있는 기회가 적음 연봉상승도 적은편 이미 퇴사해서 바라는점은 없습니다 복지는 좋았어여","복지도 괜찮은편 커리어적으로 발전할 수 있는 기회가 적음 연봉상승도 적은편 이미 퇴사해서 바라는점은 없습니다 복지는 좋았어여 점심시간이 1시간 30분으로 넉넉하고, 선택근무제가 가능하며 야근수당도 지급됨 경직된 분위기와 더불어, IT회사임에도 불구하고 업무 방식과 시스템이 구식에 머물러 있음 감정적인 리더십보다 책임 있는 경영이 요구되며, 구성원이 신뢰하고 존경할 수 있는 리더가 되기를 바람","또한 개발 인력 중심의 편중된 대우도 개선되어야함"]},"duty_similarity":{"similarity":0.0265,"only_in_job":["관리","연계","수출입물류","운영","RestAPI","사내","시스템","통한","데이터","중계"],"only_in_review":["힘들다","어려움"]}},"호전실업":{"company_name":"호전실업","size_category":"중소기업","overall_rating":2.8,"employee_count":92.0,"industry":"제조/화학","hidden_signal":{"score_by_cat":{"노동강도":3.02,"조직분위기":1.73,"평가이탈":1.73},"total_score":6.48,"highlight":["벤더 다 힘들다고 하는데 그래도 우븐업계에서 꾸준히 성장하고 있는 회사인듯 낮은연봉과 노후된 사무실, 성과급이라도 많이 주셨으면","야근없이 퇴근하기 좋고, 짤릴 걱정 없는 회사입니다","신고하기 야근없이 퇴근하기 좋고, 짤릴 걱정 없는 회사입니다"]},"duty_similarity":{"similarity":0.0203,"only_in_job":["관리","수행","Interrupt","•장비","수립","•시스템","제어","•MCU","인터페이스","관리(현장"],"only_in_review":[]}},"휴먼컨설팅그룹":{"company_name":"휴먼컨설팅그룹","size_category":"대기업/중견","overall_rating":3.3,"employee_count":233.0,"industry":"IT/웹/통신","hidden_signal":{"score_by_cat":{"노동강도":3.41,"조직분위기":6.07,"평가이탈":7.21},"total_score":16.69,"highlight":["- 야근 택시비 지원","- 그리고 그 결정이 제대로 공지도 안되서 아는 사람만 먼저 알고있음","- talenx팀으로 들어가면 서비스가 인원대비 돈 못벌어서 눈치보임"]},"duty_similarity":{"similarity":0.0395,"only_in_job":["단순","자사","(SI성","hunel","시스템","e-HR","Framework","프론트엔드","지양)","기반"],"only_in_review":[]}}},"size_avg":{"대기업/중견":15.26,"중소기업":15.6,"스타트업":17.88}};
+
+const SIGNALS={노동강도:['야근','바쁘다','힘들다','심하다','부족하다'],조직분위기:['정치','눈치','대표','인력'],평가이탈:['낮다','안되다','나쁘다','별로','아쉽다','제대로','퇴사','월급','어려움']};
+const ALL_SIGNAL_WORDS=Object.values(SIGNALS).flat();
+const SIGNAL_COLORS={노동강도:'#E24B4A',조직분위기:'#BA7517',평가이탈:'#185FA5'};
+const MAX_SCORE=50;
+const COLL='companies';
+
+let db=JSON.parse(JSON.stringify(INITIAL_DB.companies));
+let sizeAvg=JSON.parse(JSON.stringify(INITIAL_DB.size_avg));
+let chartInst=null;
+let fsReady=false;
+
+// Firebase에서 추가 데이터 로드
+async function loadFromFirebase(){
+  const statusEl=document.getElementById('db-status');
+  try{
+    const snap=await getDocs(collection(firestore,COLL));
+    snap.forEach(d=>{
+      const data=d.data();
+      // hidden_signal이 있는 문서만 병합
+      if(data.hidden_signal){
+        db[d.id]=data;
+      }
+    });
+    fsReady=true;
+    const extra=snap.size;
+    statusEl.className='db-status ok';
+    statusEl.textContent=`Firebase 연결됨 · 사용자 추가 데이터 ${extra}건 로드`;
+  }catch(e){
+    statusEl.className='db-status err';
+    statusEl.textContent='Firebase 연결 실패 — 기본 DB(49개)로 동작합니다';
+    console.error(e);
+  }
+}
+
+async function saveToFirebase(name, data){
+  if(!fsReady) return;
+  try{
+    await setDoc(doc(firestore,COLL,name), data, {merge:true});
+  }catch(e){
+    console.error('저장 실패:',e);
+  }
+}
+
+function switchTab(t){
+  document.getElementById('pane-db').style.display=t==='db'?'block':'none';
+  document.getElementById('pane-manual').style.display=t==='manual'?'block':'none';
+  document.getElementById('tab-db').classList.toggle('active',t==='db');
+  document.getElementById('tab-manual').classList.toggle('active',t==='manual');
+  document.getElementById('result-area').style.display='none';
+}
+window.switchTab=switchTab;
+
+function onSearch(val){
+  const list=document.getElementById('company-list');
+  if(!val.trim()){list.style.display='none';return;}
+  const matched=Object.keys(db).filter(n=>n.includes(val.trim()));
+  if(!matched.length){list.style.display='none';return;}
+  list.innerHTML=matched.slice(0,8).map(n=>`<li onclick="selectCompany('${n}')">${n}</li>`).join('');
+  list.style.display='block';
+}
+window.onSearch=onSearch;
+
+function selectFirst(){
+  const val=document.getElementById('search-input').value.trim();
+  if(!val) return;
+  const matched=Object.keys(db).filter(n=>n.includes(val));
+  if(matched.length) selectCompany(matched[0]);
+  else showNoResult(val);
+}
+window.selectFirst=selectFirst;
+
+function selectCompany(name){
+  document.getElementById('search-input').value=name;
+  document.getElementById('company-list').style.display='none';
+  const data=db[name];
+  if(!data){showNoResult(name);return;}
+  renderResult(data);
+}
+window.selectCompany=selectCompany;
+
+function showNoResult(name){
+  const ra=document.getElementById('result-area');
+  ra.style.display='block';
+  ra.innerHTML=`<div class="card no-result">DB에 등록되지 않은 회사입니다 — <strong>${name}</strong><br><span style="font-size:12px;margin-top:6px;display:block;color:#aaa">리뷰 직접 입력 탭에서 분석하고 Firebase DB에 추가할 수 있습니다.</span></div>`;
+}
+
+async function analyzeManual(){
+  const name=document.getElementById('manual-name').value.trim();
+  const review=document.getElementById('manual-review').value.trim();
+  const rating=parseFloat(document.getElementById('manual-rating').value)||null;
+  const size=document.getElementById('manual-size').value||null;
+  if(!name||!review){alert('회사명과 리뷰 텍스트를 입력해주세요.');return;}
+
+  const btn=document.querySelector('#pane-manual button.primary');
+  btn.disabled=true; btn.textContent='저장 중...';
+
+  const hs=calcHiddenSignal(review);
+  const existing=db[name];
+  let toSave;
+
+  if(existing){
+    const merged=(existing._raw_review||'')+' '+review;
+    existing.hidden_signal=calcHiddenSignal(merged);
+    existing._raw_review=merged;
+    if(rating&&!existing.overall_rating) existing.overall_rating=rating;
+    if(size&&!existing.size_category) existing.size_category=size;
+    toSave=existing;
+  } else {
+    toSave={company_name:name,size_category:size,overall_rating:rating,employee_count:null,industry:null,hidden_signal:hs,duty_similarity:null,_raw_review:review};
+    db[name]=toSave;
+  }
+
+  await saveToFirebase(name, toSave);
+  btn.disabled=false; btn.textContent='분석 및 DB 저장 →';
+  renderResult(db[name]);
+}
+window.analyzeManual=analyzeManual;
+
+function calcHiddenSignal(text){
+  const tokens=text.split(/\s+/);
+  const total=tokens.length;
+  const score_by_cat={};
+  for(const [cat,words] of Object.entries(SIGNALS)){
+    let cnt=0;
+    for(const w of words) for(const t of tokens) if(t.includes(w)) cnt++;
+    score_by_cat[cat]=total>0?Math.round(cnt/total*1000*100)/100:0;
+  }
+  const total_score=Math.round(Object.values(score_by_cat).reduce((a,b)=>a+b,0)*100)/100;
+  const highlight=[];
+  const sentences=text.split(/[.!?\n]/);
+  for(const s of sentences){
+    const st=s.trim();
+    if(st.length>10&&ALL_SIGNAL_WORDS.some(w=>st.includes(w))) highlight.push(st);
+  }
+  return{score_by_cat,total_score,highlight:highlight.slice(0,3)};
+}
+
+function getRiskLevel(score){
+  if(score>=25) return{label:'고위험',color:'#c62828',bg:'#FFEBEE',icon:'⚠'};
+  if(score>=15) return{label:'주의',color:'#e65100',bg:'#FFF3E0',icon:'●'};
+  return{label:'양호',color:'#2e7d32',bg:'#E8F5E9',icon:'✓'};
+}
+
+function renderResult(data){
+  const ra=document.getElementById('result-area');
+  ra.style.display='block';
+  const hs=data.hidden_signal;
+  const risk=hs?getRiskLevel(hs.total_score):null;
+  const ds=data.duty_similarity;
+  const sizeLabel=data.size_category||'미분류';
+  const sizeAvgScore=sizeAvg[sizeLabel]||15;
+  let html='';
+
+  html+=`<div class="card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
+      <span style="font-size:19px;font-weight:600">${data.company_name}</span>
+      <span style="font-size:12px;padding:2px 10px;border-radius:20px;background:#f0f0ec;color:#555;border:0.5px solid #d8d8d0">${sizeLabel}</span>
+      ${data.industry?`<span style="font-size:12px;color:#999">${data.industry}</span>`:''}
+    </div>
+    <div class="meta-grid">
+      <div class="meta-card"><div class="label">잡플래닛 평점</div><div class="value">${data.overall_rating!=null?parseFloat(data.overall_rating).toFixed(1):'N/A'} <span style="font-size:12px;color:#aaa">/ 5.0</span></div></div>
+      ${hs?`<div class="meta-card"><div class="label">히든 시그널 점수</div><div class="value" style="color:${risk.color}">${hs.total_score.toFixed(1)}</div></div>`:''}
+      <div class="meta-card"><div class="label">직원 수</div><div class="value">${data.employee_count?Math.round(data.employee_count)+'명':'N/A'}</div></div>
+      ${ds?`<div class="meta-card"><div class="label">공고-리뷰 유사도</div><div class="value">${(ds.similarity*100).toFixed(1)}<span style="font-size:12px;color:#aaa">%</span></div></div>`:''}
+    </div>`;
+
+  if(hs){
+    html+=`<span class="risk-badge" style="background:${risk.bg};color:${risk.color};border:0.5px solid ${risk.color}40">${risk.icon} ${risk.label} — 히든 시그널 점수 ${hs.total_score.toFixed(1)}점</span>
+    <div class="section-title">카테고리별 히든 시그널</div>`;
+    for(const [cat,score] of Object.entries(hs.score_by_cat)){
+      const pct=Math.min(score/MAX_SCORE*100,100);
+      html+=`<div class="signal-row">
+        <div class="signal-label"><span>${cat}</span><span style="color:${SIGNAL_COLORS[cat]};font-weight:500">${score.toFixed(1)}</span></div>
+        <div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${SIGNAL_COLORS[cat]}"></div></div>
+      </div>`;
+    }
+    html+=`<div class="size-compare-row">
+      <span style="font-size:12px;color:#888;min-width:90px">${sizeLabel} 평균 ${sizeAvgScore.toFixed(1)}</span>
+      <div class="size-bar-bg"><div class="size-bar-fill" style="width:${Math.min(sizeAvgScore/MAX_SCORE*100,100)}%"></div></div>
+    </div>
+    <div style="font-size:11px;color:#888;margin-top:4px">${sizeLabel} 평균 대비 ${hs.total_score>sizeAvgScore?`<span style="color:#c62828">+${(hs.total_score-sizeAvgScore).toFixed(1)}점 높음</span>`:`<span style="color:#2e7d32">${(hs.total_score-sizeAvgScore).toFixed(1)}점 낮음</span>`}</div>
+    <div style="margin:1.5rem 0;position:relative;height:220px"><canvas id="signalChart"></canvas></div>`;
+
+    if(hs.highlight&&hs.highlight.length){
+      html+=`<div class="section-title" style="margin-bottom:8px">리뷰 내 히든 시그널 감지 문장</div><ul class="highlight-list">`;
+      for(const h of hs.highlight){
+        let hi=h;
+        for(const w of ALL_SIGNAL_WORDS) hi=hi.replaceAll(w,`<mark>${w}</mark>`);
+        html+=`<li>${hi.slice(0,140)}${h.length>140?'…':''}</li>`;
+      }
+      html+=`</ul>`;
+    }
+  }
+
+  if(ds){
+    html+=`<div class="separator">
+      <div class="section-title">공고 담당업무 vs 실제 업무 일치도</div>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
+        <span style="font-size:22px;font-weight:600">${(ds.similarity*100).toFixed(1)}%</span>
+        <div style="flex:1">
+          <div style="font-size:12px;color:#888;margin-bottom:4px">어휘 일치도 (TF-IDF 코사인 유사도)</div>
+          <div class="bar-bg" style="height:10px"><div class="bar-fill" style="width:${Math.min(ds.similarity*500,100)}%;background:#185FA5"></div></div>
+        </div>
+      </div>`;
+    if(ds.only_in_review&&ds.only_in_review.length){
+      html+=`<div style="font-size:12px;color:#888;margin-bottom:6px">공고에는 없지만 리뷰에 등장한 신호어</div><div style="display:flex;flex-wrap:wrap;gap:4px">`;
+      for(const w of ds.only_in_review) html+=`<span class="chip warning">👁 ${w}</span>`;
+      html+=`</div>`;
+    }
+    html+=`</div>`;
+  }
+
+  const escapedName=data.company_name.replace(/'/g,"\\'");
+  html+=`<div class="separator">
+    <div class="section-title" style="margin-bottom:4px">리뷰 추가 등록</div>
+    <div style="font-size:12px;color:#999;margin-bottom:8px">중복되지 않는 리뷰를 추가하면 Firebase DB에 반영되어 모든 사용자와 공유됩니다.</div>
+    <textarea id="add-review-text" placeholder="추가할 리뷰 텍스트를 입력하세요" style="height:80px;margin-bottom:8px"></textarea>
+    <button class="primary" id="add-btn" onclick="addReview('${escapedName}')">DB에 추가 저장</button>
+    <div id="add-msg" class="msg"></div>
+  </div></div>`;
+
+  ra.innerHTML=html;
+
+  if(hs){
+    setTimeout(()=>{
+      const ctx=document.getElementById('signalChart');
+      if(!ctx) return;
+      if(chartInst) chartInst.destroy();
+      chartInst=new Chart(ctx,{
+        type:'bar',
+        data:{
+          labels:['노동강도','조직분위기','평가이탈'],
+          datasets:[{
+            label:'히든 시그널 점수',
+            data:[hs.score_by_cat.노동강도,hs.score_by_cat.조직분위기,hs.score_by_cat.평가이탈],
+            backgroundColor:['rgba(226,75,74,0.2)','rgba(186,117,23,0.2)','rgba(24,95,165,0.2)'],
+            borderColor:['#E24B4A','#BA7517','#185FA5'],
+            borderWidth:1.5,borderRadius:4
+          },{
+            label:sizeLabel+' 평균',
+            data:[sizeAvgScore/3,sizeAvgScore/3,sizeAvgScore/3],
+            type:'line',
+            borderColor:'#ccc',
+            borderDash:[4,4],
+            borderWidth:1.5,
+            pointRadius:0,
+            fill:false
+          }]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{
+            y:{beginAtZero:true,max:Math.max(MAX_SCORE/2,Math.max(...Object.values(hs.score_by_cat))*1.4),ticks:{font:{size:11}}},
+            x:{ticks:{font:{size:11}}}
+          }
+        }
+      });
+    },100);
+  }
+}
+window.renderResult=renderResult;
+
+async function addReview(name){
+  const text=document.getElementById('add-review-text').value.trim();
+  const msg=document.getElementById('add-msg');
+  const btn=document.getElementById('add-btn');
+  if(!text){msg.className='msg error';msg.textContent='리뷰 텍스트를 입력해주세요.';return;}
+  if(text.length<30){msg.className='msg error';msg.textContent='텍스트가 너무 짧습니다 (30자 이상 입력해주세요).';return;}
+  const existing=db[name];
+  if(!existing){msg.className='msg error';msg.textContent='회사를 먼저 선택해주세요.';return;}
+
+  // 중복 체크
+  const prev=existing._raw_review||'';
+  const overlap=text.slice(0,30);
+  if(prev.includes(overlap)){msg.className='msg error';msg.textContent='이미 등록된 리뷰와 중복됩니다.';return;}
+
+  btn.disabled=true; btn.textContent='저장 중...';
+  const merged=prev+' '+text;
+  existing.hidden_signal=calcHiddenSignal(merged);
+  existing._raw_review=merged;
+  await saveToFirebase(name, existing);
+  btn.disabled=false; btn.textContent='DB에 추가 저장';
+  msg.className='msg success';msg.textContent='Firebase DB에 저장되었습니다.';
+  setTimeout(()=>{renderResult(db[name]);},500);
+}
+window.addReview=addReview;
+
+// 초기화
+loadFromFirebase();
+</script>
+</body>
+</html>
