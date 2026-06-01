@@ -17,13 +17,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans
 .nav-tab{padding:7px 16px;font-size:13px;border:0.5px solid #d0d0c8;border-radius:20px;background:#fff;cursor:pointer;color:#666;font-family:inherit;transition:all 0.15s}
 .nav-tab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
 .nav-tab:hover:not(.active){background:#f0f0ec}
-input[type=text],input[type=number],select,textarea{width:100%;padding:8px 12px;border:0.5px solid #d0d0c8;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;color:#1a1a1a;outline:none;transition:border-color 0.15s}
+input[type=text],input[type=number],input[type=password],select,textarea{width:100%;padding:8px 12px;border:0.5px solid #d0d0c8;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;color:#1a1a1a;outline:none;transition:border-color 0.15s}
 input:focus,select:focus,textarea:focus{border-color:#888}
 textarea{resize:vertical}
 button{padding:8px 18px;border:0.5px solid #d0d0c8;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;color:#1a1a1a;cursor:pointer;transition:background 0.15s}
 button:hover{background:#f0f0ec}
 button.primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
 button.primary:hover{background:#333}
+button.danger-btn{background:#fff;color:#c62828;border-color:#ef9a9a}
+button.danger-btn:hover{background:#FFEBEE}
+button.edit-btn{background:#fff;color:#185FA5;border-color:#90CAF9;font-size:12px;padding:4px 10px}
+button.edit-btn:hover{background:#EEF4FF}
 button:disabled{opacity:0.45;cursor:not-allowed}
 .search-row{display:flex;gap:8px;margin-bottom:1rem}
 .search-row input{flex:1}
@@ -75,23 +79,28 @@ mark{background:#FFF3CD;color:#856404;border-radius:2px;padding:0 2px}
 .match-score{font-size:22px;font-weight:600}
 .input-row{display:flex;gap:8px;margin-bottom:8px}
 .board-post{border:0.5px solid #e0e0d8;border-radius:10px;padding:14px;margin-bottom:10px;background:#fff}
-.board-post-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
 .board-post-title{font-size:13px;font-weight:500}
-.board-post-meta{font-size:11px;color:#aaa;margin-top:2px}
+.board-post-meta{font-size:11px;color:#aaa;margin-top:2px;margin-bottom:8px}
 .board-post-body{font-size:12px;color:#555;line-height:1.6;margin-bottom:10px;white-space:pre-wrap}
-.board-post-actions{display:flex;gap:8px}
+.board-post-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .vote-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;font-size:12px;border-radius:20px;border:0.5px solid #d0d0c8;background:#fff;cursor:pointer;font-family:inherit}
 .vote-btn:hover{background:#f0f0ec}
 .vote-btn.up.voted{background:#E8F5E9;border-color:#a5d6a7;color:#2e7d32}
 .vote-btn.down.voted{background:#FFEBEE;border-color:#ef9a9a;color:#c62828}
 .board-form{border:0.5px solid #e0e0d8;border-radius:10px;padding:14px;margin-bottom:1rem;background:#f8f8f6}
 .board-empty{text-align:center;padding:2rem 0;color:#aaa;font-size:13px}
+.pw-hint{font-size:11px;color:#999;margin-top:3px}
+/* 모달 */
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:1000}
 .modal{background:#fff;border-radius:14px;padding:1.5rem;width:90%;max-width:480px;max-height:90vh;overflow-y:auto}
 .modal h2{font-size:16px;font-weight:600;margin-bottom:4px}
 .modal .sub{font-size:12px;color:#888;margin-bottom:1.2rem}
 .modal-actions{display:flex;gap:8px;margin-top:1rem}
 .modal-actions button{flex:1}
+/* 수정/삭제 확인 모달 */
+.sm-modal{background:#fff;border-radius:14px;padding:1.5rem;width:90%;max-width:380px}
+.sm-modal h3{font-size:15px;font-weight:600;margin-bottom:8px}
+.sm-modal p{font-size:13px;color:#555;margin-bottom:1rem;line-height:1.5}
 </style>
 </head>
 <body>
@@ -110,6 +119,7 @@ mark{background:#FFF3CD;color:#856404;border-radius:2px;padding:0 2px}
     <button class="nav-tab" onclick="switchMain('board-req')">➕ 기업 추가 요청</button>
   </div>
 
+  <!-- 회사 검색 -->
   <div id="pane-search">
     <div class="card">
       <div class="search-row">
@@ -122,20 +132,21 @@ mark{background:#FFF3CD;color:#856404;border-radius:2px;padding:0 2px}
     <div id="result-area"></div>
   </div>
 
+  <!-- 리뷰 직접 입력 -->
   <div id="pane-review" style="display:none">
     <div class="card">
       <div class="section-title">리뷰 직접 입력 분석</div>
       <input type="text" id="manual-name" placeholder="회사명" style="margin-bottom:8px" oninput="sanitizeCompanyInput(this)">
       <div id="manual-name-msg" class="msg" style="margin-bottom:6px"></div>
-      <textarea id="manual-review" placeholder="잡플래닛 리뷰 텍스트를 붙여넣으세요 (장점·단점·경영진에게 바라는 점 포함, 최소 1개 이상 필수)" style="height:110px;margin-bottom:8px"></textarea>
+      <textarea id="manual-review" placeholder="잡플래닛 리뷰 텍스트를 붙여넣으세요 (장점·단점·경영진에게 바라는 점 포함, 필수)" style="height:110px;margin-bottom:8px"></textarea>
       <textarea id="manual-job" placeholder="(선택사항) 채용 공고 담당업무를 붙여넣으면 공고 신뢰도를 추가 분석합니다" style="height:80px;margin-bottom:8px"></textarea>
       <div class="input-row" style="margin-bottom:8px">
         <input type="number" id="manual-rating" placeholder="종합 평점 (예: 3.2)" step="0.1" min="1" max="5">
         <select id="manual-size">
           <option value="">회사 규모 선택 (필수)</option>
-          <option value="대기업/중견">대기업/중견 (직원 200명+)</option>
-          <option value="중소기업">중소기업 (직원 50~199명)</option>
-          <option value="스타트업">스타트업 (직원 50명 미만)</option>
+          <option value="대기업/중견">대기업/중견 (200명+)</option>
+          <option value="중소기업">중소기업 (50~199명)</option>
+          <option value="스타트업">스타트업 (50명 미만)</option>
         </select>
       </div>
       <button class="primary" onclick="analyzeManual()" style="width:100%">분석 및 DB 저장 →</button>
@@ -145,14 +156,20 @@ mark{background:#FFF3CD;color:#856404;border-radius:2px;padding:0 2px}
     <div id="manual-result-area"></div>
   </div>
 
+  <!-- 정보 수정 건의 게시판 -->
   <div id="pane-board-fix" style="display:none">
     <div class="card">
       <div class="section-title" style="margin-bottom:4px">🛠 잘못된 정보 수정 건의</div>
       <div style="font-size:12px;color:#888;margin-bottom:1rem">등록된 회사 정보 중 잘못된 내용이 있다면 알려주세요. 검토 후 반영됩니다.</div>
       <div class="board-form">
+        <div class="input-row" style="margin-bottom:8px">
+          <input type="text" id="fix-author" placeholder="이름 또는 닉네임 (선택사항)">
+          <input type="password" id="fix-pw" placeholder="수정/삭제용 비밀번호 (필수)">
+        </div>
+        <div class="pw-hint" style="margin-bottom:8px">* 비밀번호는 나중에 수정·삭제 시 필요합니다. 반드시 기억해두세요.</div>
         <input type="text" id="fix-company" placeholder="수정 대상 회사명" style="margin-bottom:8px">
         <input type="text" id="fix-field" placeholder="수정할 항목 (예: 직원 수, 업종, 평점 등)" style="margin-bottom:8px">
-        <textarea id="fix-content" placeholder="현재 잘못된 내용과 올바른 내용을 함께 작성해주세요" style="height:80px;margin-bottom:8px"></textarea>
+        <textarea id="fix-content" placeholder="현재 잘못된 내용과 올바른 내용을 함께 작성해주세요&#10;예) 현재: 중소기업 / 올바른: 스타트업 (직원 35명)" style="height:80px;margin-bottom:8px"></textarea>
         <button class="primary" onclick="submitPost('fix')">건의 등록</button>
         <div id="fix-msg" class="msg" style="margin-top:6px"></div>
       </div>
@@ -160,11 +177,17 @@ mark{background:#FFF3CD;color:#856404;border-radius:2px;padding:0 2px}
     </div>
   </div>
 
+  <!-- 기업 추가 요청 게시판 -->
   <div id="pane-board-req" style="display:none">
     <div class="card">
       <div class="section-title" style="margin-bottom:4px">➕ 기업 추가 요청</div>
       <div style="font-size:12px;color:#888;margin-bottom:1rem">분석하고 싶은 기업을 요청해주세요. 공감이 많은 순서대로 우선 추가합니다.</div>
       <div class="board-form">
+        <div class="input-row" style="margin-bottom:8px">
+          <input type="text" id="req-author" placeholder="이름 또는 닉네임 (선택사항)">
+          <input type="password" id="req-pw" placeholder="수정/삭제용 비밀번호 (필수)">
+        </div>
+        <div class="pw-hint" style="margin-bottom:8px">* 비밀번호는 나중에 수정·삭제 시 필요합니다. 반드시 기억해두세요.</div>
         <input type="text" id="req-company" placeholder="추가 요청할 회사명" style="margin-bottom:8px">
         <input type="text" id="req-industry" placeholder="업종 (예: IT/웹/통신)" style="margin-bottom:8px">
         <textarea id="req-reason" placeholder="추가 요청 이유 또는 참고 사항 (선택사항)" style="height:70px;margin-bottom:8px"></textarea>
@@ -176,6 +199,7 @@ mark{background:#FFF3CD;color:#856404;border-radius:2px;padding:0 2px}
   </div>
 </div>
 
+<!-- 기업 추가 모달 -->
 <div id="add-modal" class="modal-overlay" style="display:none">
   <div class="modal">
     <h2>새 기업 추가</h2>
@@ -183,9 +207,9 @@ mark{background:#FFF3CD;color:#856404;border-radius:2px;padding:0 2px}
     <input type="text" id="modal-name" placeholder="회사명" style="margin-bottom:8px" readonly>
     <select id="modal-size" style="margin-bottom:8px">
       <option value="">회사 규모 선택 (필수)</option>
-      <option value="대기업/중견">대기업/중견 (직원 200명+)</option>
-      <option value="중소기업">중소기업 (직원 50~199명)</option>
-      <option value="스타트업">스타트업 (직원 50명 미만)</option>
+      <option value="대기업/중견">대기업/중견 (200명+)</option>
+      <option value="중소기업">중소기업 (50~199명)</option>
+      <option value="스타트업">스타트업 (50명 미만)</option>
     </select>
     <input type="text" id="modal-industry" placeholder="업종 (예: IT/웹/통신)" style="margin-bottom:8px">
     <input type="number" id="modal-employees" placeholder="직원 수 (선택사항)" style="margin-bottom:8px">
@@ -199,10 +223,40 @@ mark{background:#FFF3CD;color:#856404;border-radius:2px;padding:0 2px}
   </div>
 </div>
 
+<!-- 수정 모달 -->
+<div id="edit-modal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <h2>게시글 수정</h2>
+    <div class="sub" id="edit-modal-sub"></div>
+    <input type="hidden" id="edit-post-id">
+    <input type="hidden" id="edit-board-type">
+    <input type="password" id="edit-pw" placeholder="등록 시 설정한 비밀번호" style="margin-bottom:8px">
+    <textarea id="edit-content" placeholder="수정할 내용을 입력하세요" style="height:100px;margin-bottom:4px"></textarea>
+    <div id="edit-msg" class="msg" style="margin-bottom:8px"></div>
+    <div class="modal-actions">
+      <button onclick="closeEditModal()">취소</button>
+      <button class="primary" onclick="submitEdit()">수정 완료</button>
+    </div>
+  </div>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div id="delete-modal" class="modal-overlay" style="display:none">
+  <div class="sm-modal">
+    <h3>게시글 삭제</h3>
+    <p>삭제 후에는 복구할 수 없습니다. 등록 시 설정한 비밀번호를 입력해주세요.</p>
+    <input type="hidden" id="delete-post-id">
+    <input type="hidden" id="delete-board-type">
+    <input type="password" id="delete-pw" placeholder="비밀번호" style="margin-bottom:8px">
+    <div id="delete-msg" class="msg" style="margin-bottom:8px"></div>
+    <div class="modal-actions">
+      <button onclick="closeDeleteModal()">취소</button>
+      <button class="danger-btn" onclick="submitDelete()">삭제하기</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script>
-// Firebase SDK (모듈 방식 대신 compat 방식 사용 — 전역 함수 문제 해결)
-</script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
@@ -240,7 +294,17 @@ let sizeAvg = JSON.parse(JSON.stringify(INITIAL_DB_DATA.size_avg));
 let chartInst = null;
 let fsReady = false;
 
-// ── Firebase 로드 ──
+// 비밀번호 단순 해시 (SHA 없이 간단한 방식)
+function simpleHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return 'h' + Math.abs(hash).toString(36);
+}
+
+// ── Firebase ──
 async function loadFromFirebase() {
   const st = document.getElementById('db-status');
   try {
@@ -251,16 +315,15 @@ async function loadFromFirebase() {
     st.textContent = 'Firebase 연결됨 · 사용자 추가 데이터 ' + snap.size + '건 로드';
   } catch(e) {
     st.className = 'db-status err';
-    st.textContent = 'Firebase 연결 실패 — 기본 DB(49개)로 동작합니다 (' + e.code + ')';
+    st.textContent = 'Firebase 연결 실패 — 기본 DB(49개)로 동작합니다 (' + (e.code||e.message) + ')';
   }
 }
-
 async function saveCompany(name, data) {
   if (!fsReady) return;
   try { await fs.collection('companies').doc(name).set(data, {merge:true}); } catch(e) {}
 }
 
-// ── 탭 전환 ──
+// ── 탭 ──
 function switchMain(tab) {
   ['search','review','board-fix','board-req'].forEach(t => {
     document.getElementById('pane-'+t).style.display = t===tab ? 'block' : 'none';
@@ -273,16 +336,13 @@ function switchMain(tab) {
 }
 
 // ── 입력 정제 ──
-function sanitizeName(raw) {
-  return raw.trim().replace(/\s+/g,' ').replace(/[<>"']/g,'');
-}
+function sanitizeName(raw) { return raw.trim().replace(/\s+/g,' ').replace(/[<>"']/g,''); }
 function sanitizeCompanyInput(el) {
   el.value = el.value.replace(/[<>"]/g,'');
   const msg = document.getElementById('manual-name-msg');
   if (el.value !== el.value.trim()) {
-    msg.className = 'msg info';
-    msg.textContent = '저장 시 앞뒤 공백이 자동으로 제거됩니다.';
-  } else { msg.textContent = ''; }
+    msg.className='msg info'; msg.textContent='저장 시 앞뒤 공백이 자동으로 제거됩니다.';
+  } else { msg.textContent=''; }
 }
 
 // ── 검색 ──
@@ -290,49 +350,40 @@ function onSearch(val) {
   const list = document.getElementById('company-list');
   if (!val.trim()) { list.style.display='none'; return; }
   const q = sanitizeName(val);
-  const matched = Object.keys(db).filter(n => n.includes(q));
+  const matched = Object.keys(db).filter(n => n.indexOf(q)!==-1);
   let items = matched.slice(0,7).map(n =>
-    '<li onclick="selectCompany(\'' + n.replace(/'/g,"\\'") + '\')">' + n + '</li>'
+    '<li onclick="selectCompany(\'' + n.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">' + escHtml(n) + '</li>'
   ).join('');
   if (!db[q]) {
-    items += '<li class="add-item" onclick="openAddModal(\'' + q.replace(/'/g,"\\'") + '\')">+ "' + q + '" 새로 추가하기</li>';
+    items += '<li class="add-item" onclick="openAddModal(\'' + q.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">+ "' + escHtml(q) + '" 새로 추가하기</li>';
   }
   list.innerHTML = items;
   list.style.display = 'block';
 }
-
 function selectFirst() {
   const val = sanitizeName(document.getElementById('search-input').value);
   if (!val) return;
-  const matched = Object.keys(db).filter(n => n.includes(val));
+  const matched = Object.keys(db).filter(n => n.indexOf(val)!==-1);
   if (matched.length) selectCompany(matched[0]);
   else openAddModal(val);
 }
-
 function selectCompany(name) {
   document.getElementById('search-input').value = name;
   document.getElementById('company-list').style.display = 'none';
-  const data = db[name];
-  if (!data) return;
-  renderResult(data, null, 'result-area');
+  if (db[name]) renderResult(db[name], null, 'result-area');
 }
 
-// ── 모달 ──
+// ── 기업 추가 모달 ──
 function openAddModal(name) {
   document.getElementById('company-list').style.display = 'none';
   document.getElementById('modal-name').value = name;
   ['modal-size','modal-industry','modal-employees','modal-rating','modal-review'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el.tagName==='SELECT') el.value=''; else el.value='';
+    const el = document.getElementById(id); if (el) el.value='';
   });
   document.getElementById('modal-msg').textContent = '';
   document.getElementById('add-modal').style.display = 'flex';
 }
-
-function closeModal() {
-  document.getElementById('add-modal').style.display = 'none';
-}
-
+function closeModal() { document.getElementById('add-modal').style.display='none'; }
 async function submitNewCompany() {
   const name = sanitizeName(document.getElementById('modal-name').value);
   const size = document.getElementById('modal-size').value;
@@ -342,11 +393,7 @@ async function submitNewCompany() {
   const review = document.getElementById('modal-review').value.trim();
   const msgEl = document.getElementById('modal-msg');
   if (!size) { msgEl.className='msg error'; msgEl.textContent='회사 규모를 선택해주세요.'; return; }
-  if (!review || review.length < 20) {
-    msgEl.className='msg error';
-    msgEl.textContent='리뷰가 없으면 기업을 추가할 수 없습니다. 잡플래닛에서 리뷰를 복사해 붙여넣어 주세요.';
-    return;
-  }
+  if (!review || review.length < 20) { msgEl.className='msg error'; msgEl.textContent='리뷰가 없으면 기업을 추가할 수 없습니다. 잡플래닛에서 리뷰를 복사해 붙여넣어 주세요.'; return; }
   const btn = document.querySelector('#add-modal .modal-actions button.primary');
   btn.disabled=true; btn.textContent='추가 중...';
   const hs = calcHiddenSignal(review);
@@ -368,12 +415,11 @@ async function analyzeManual() {
   const size = document.getElementById('manual-size').value;
   const msgEl = document.getElementById('manual-msg');
   if (!name) { msgEl.className='msg error'; msgEl.textContent='회사명을 입력해주세요.'; return; }
-  if (!review || review.length < 20) { msgEl.className='msg error'; msgEl.textContent='리뷰 텍스트를 입력해주세요 (최소 1개 이상).'; return; }
+  if (!review || review.length < 20) { msgEl.className='msg error'; msgEl.textContent='리뷰 텍스트를 입력해주세요.'; return; }
   if (!size) { msgEl.className='msg error'; msgEl.textContent='회사 규모를 선택해주세요.'; return; }
   document.getElementById('manual-name').value = name;
   const btn = document.querySelector('#pane-review button.primary');
   btn.disabled=true; btn.textContent='저장 중...';
-  const hs = calcHiddenSignal(review);
   const existing = db[name];
   let toSave;
   if (existing) {
@@ -389,6 +435,7 @@ async function analyzeManual() {
     if (!existing.size_category) existing.size_category = size;
     toSave = existing;
   } else {
+    const hs = calcHiddenSignal(review);
     toSave = {company_name:name,size_category:size,overall_rating:rating,employee_count:null,industry:null,hidden_signal:hs,duty_similarity:null,_raw_review:review,_review_count:1};
     db[name] = toSave;
   }
@@ -404,25 +451,22 @@ function analyzeJobMatch(jobText, reviewText) {
   const jL = jobText.toLowerCase(), rL = reviewText.toLowerCase();
   const jobCats=[], revCats=[];
   for (const [cat,kws] of Object.entries(WORK_CATEGORIES)) {
-    if (kws.some(k=>jL.includes(k))) jobCats.push(cat);
-    if (kws.some(k=>rL.includes(k))) revCats.push(cat);
+    if (kws.some(k=>jL.indexOf(k)!==-1)) jobCats.push(cat);
+    if (kws.some(k=>rL.indexOf(k)!==-1)) revCats.push(cat);
   }
-  const catMatches = jobCats.map(c => ({cat:c, found:revCats.includes(c)}));
-  const jobTechs = TECH_KEYWORDS.filter(k=>jL.includes(k));
-  const techChecks = jobTechs.map(k => ({keyword:k, found:rL.includes(k)}));
-  const hiddenInReview = ALL_SIGNAL_WORDS.filter(w=>rL.includes(w)&&!jL.includes(w));
+  const catMatches = jobCats.map(c => ({cat:c, found:revCats.indexOf(c)!==-1}));
+  const jobTechs = TECH_KEYWORDS.filter(k=>jL.indexOf(k)!==-1);
+  const techChecks = jobTechs.map(k => ({keyword:k, found:rL.indexOf(k)!==-1}));
+  const hiddenInReview = ALL_SIGNAL_WORDS.filter(w=>rL.indexOf(w)!==-1 && jL.indexOf(w)===-1);
   return {catMatches, techChecks, hiddenInReview};
 }
-
 function runJobAnalysis(name) {
   const el = document.getElementById('job-textarea-'+name);
   if (!el || !el.value.trim()) { alert('공고 담당업무 텍스트를 입력해주세요.'); return; }
   const data = db[name];
-  const reviewText = (data && data._raw_review) || (data && data.hidden_signal && data.hidden_signal.highlight && data.hidden_signal.highlight.join(' ')) || '';
-  const result = analyzeJobMatch(el.value.trim(), reviewText);
-  renderJobResult(name, result);
+  const rText = (data && data._raw_review) || (data && data.hidden_signal && data.hidden_signal.highlight && data.hidden_signal.highlight.join(' ')) || '';
+  renderJobResult(name, analyzeJobMatch(el.value.trim(), rText));
 }
-
 function renderJobResult(name, result) {
   const el = document.getElementById('job-result-'+name);
   if (!el) return;
@@ -480,7 +524,6 @@ function calcHiddenSignal(text) {
   });
   return {score_by_cat, total_score, highlight: highlight.slice(0,3)};
 }
-
 function getRiskLevel(score) {
   if (score>=25) return {label:'고위험',color:'#c62828',bg:'#FFEBEE',icon:'⚠'};
   if (score>=15) return {label:'주의',color:'#e65100',bg:'#FFF3E0',icon:'●'};
@@ -509,7 +552,6 @@ function renderResult(data, jobResult, targetId) {
   html += '<div class="meta-card"><div class="label">직원 수</div><div class="value">'+(data.employee_count?Math.round(data.employee_count)+'명':'N/A')+'</div></div>';
   html += '<div class="meta-card"><div class="label">누적 리뷰 수</div><div class="value">'+(data._review_count||'기본')+'</div></div>';
   html += '</div>';
-
   if (hs) {
     html += '<span class="risk-badge" style="background:'+risk.bg+';color:'+risk.color+';border:0.5px solid '+risk.color+'40">'+risk.icon+' '+risk.label+' — 히든 시그널 점수 '+hs.total_score.toFixed(1)+'점</span>';
     html += '<div class="section-title">카테고리별 히든 시그널</div>';
@@ -517,8 +559,8 @@ function renderResult(data, jobResult, targetId) {
       const pct = Math.min(score/MAX_SCORE*100,100);
       html += '<div class="signal-row"><div class="signal-label"><span>'+cat+'</span><span style="color:'+SIGNAL_COLORS[cat]+';font-weight:500">'+score.toFixed(1)+'</span></div><div class="bar-bg"><div class="bar-fill" style="width:'+pct+'%;background:'+SIGNAL_COLORS[cat]+'"></div></div></div>';
     }
-    html += '<div class="size-compare-row"><span style="font-size:12px;color:#888;min-width:90px">'+sizeLabel+' 평균 '+sizeAvgScore.toFixed(1)+'</span><div class="size-bar-bg"><div class="size-bar-fill" style="width:'+Math.min(sizeAvgScore/MAX_SCORE*100,100)+'%"></div></div></div>';
     const diff = hs.total_score - sizeAvgScore;
+    html += '<div class="size-compare-row"><span style="font-size:12px;color:#888;min-width:90px">'+sizeLabel+' 평균 '+sizeAvgScore.toFixed(1)+'</span><div class="size-bar-bg"><div class="size-bar-fill" style="width:'+Math.min(sizeAvgScore/MAX_SCORE*100,100)+'%"></div></div></div>';
     html += '<div style="font-size:11px;color:#888;margin-top:4px">'+(diff>0?'<span style="color:#c62828">+'+diff.toFixed(1)+'점 높음 ('+sizeLabel+' 평균 대비)</span>':'<span style="color:#2e7d32">'+diff.toFixed(1)+'점 낮음 ('+sizeLabel+' 평균 대비)</span>')+'</div>';
     html += '<div style="margin:1.5rem 0;position:relative;height:220px"><canvas id="sc_'+en+'"></canvas></div>';
     if (hs.highlight && hs.highlight.length) {
@@ -531,26 +573,19 @@ function renderResult(data, jobResult, targetId) {
       html += '</ul>';
     }
   }
-
-  html += '<div class="separator"><div class="job-input-section">';
-  html += '<div class="section-title">채용 공고 신뢰도 분석</div>';
+  html += '<div class="separator"><div class="job-input-section"><div class="section-title">채용 공고 신뢰도 분석</div>';
   html += '<div style="font-size:12px;color:#999;margin-bottom:8px">선택사항 — 공고 담당업무를 붙여넣으면 업무 카테고리 일치 여부와 기술 스택 검증 결과를 보여줍니다.</div>';
   html += '<textarea id="job-textarea-'+en+'" placeholder="담당업무 텍스트를 붙여넣으세요" style="height:90px;margin-bottom:8px"></textarea>';
   html += '<button class="primary" onclick="runJobAnalysis(\''+en+'\')">공고 분석하기 →</button>';
   html += '</div><div id="job-result-'+en+'" style="margin-top:10px"></div></div>';
-
-  html += '<div class="separator">';
-  html += '<div class="section-title" style="margin-bottom:4px">리뷰 추가 등록</div>';
+  html += '<div class="separator"><div class="section-title" style="margin-bottom:4px">리뷰 추가 등록</div>';
   html += '<div style="font-size:12px;color:#999;margin-bottom:8px">중복되지 않는 리뷰를 추가하면 Firebase DB에 반영됩니다.</div>';
   html += '<textarea id="ar-text-'+en+'" placeholder="추가할 리뷰 텍스트 (장점·단점 포함)" style="height:80px;margin-bottom:8px"></textarea>';
-  html += '<div class="input-row" style="margin-bottom:8px"><input type="number" id="ar-rating-'+en+'" placeholder="이 리뷰의 평점 (예: 3.5)" step="0.1" min="1" max="5" style="max-width:220px"><span style="font-size:12px;color:#999;align-self:center;flex:1">평점 입력 시 회사 평균 평점이 업데이트됩니다.</span></div>';
+  html += '<div class="input-row" style="margin-bottom:8px"><input type="number" id="ar-rating-'+en+'" placeholder="이 리뷰의 평점 (예: 3.5)" step="0.1" min="1" max="5" style="max-width:220px"><span style="font-size:12px;color:#999;align-self:center;flex:1">평점 입력 시 평균 평점이 업데이트됩니다.</span></div>';
   html += '<button class="primary" id="ar-btn-'+en+'" onclick="addReview(\''+en+'\',\''+escHtml(data.company_name)+'\')">DB에 추가 저장</button>';
-  html += '<div id="ar-msg-'+en+'" class="msg"></div>';
-  html += '</div></div>';
-
+  html += '<div id="ar-msg-'+en+'" class="msg"></div></div></div>';
   ra.innerHTML = html;
   if (jobResult) renderJobResult(en, jobResult);
-
   if (hs) {
     setTimeout(function() {
       const ctx = document.getElementById('sc_'+en);
@@ -567,22 +602,25 @@ function renderResult(data, jobResult, targetId) {
         },
         options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:Math.max(MAX_SCORE/2,Math.max.apply(null,Object.values(hs.score_by_cat))*1.4),ticks:{font:{size:11}}},x:{ticks:{font:{size:11}}}}}
       });
-    }, 100);
+    },100);
   }
 }
 
 // ── 리뷰 추가 ──
 async function addReview(en, originalName) {
-  const text = document.getElementById('ar-text-'+en) ? document.getElementById('ar-text-'+en).value.trim() : '';
-  const ratingVal = parseFloat(document.getElementById('ar-rating-'+en) ? document.getElementById('ar-rating-'+en).value : '');
+  const textEl = document.getElementById('ar-text-'+en);
+  const ratingEl = document.getElementById('ar-rating-'+en);
   const msg = document.getElementById('ar-msg-'+en);
   const btn = document.getElementById('ar-btn-'+en);
+  if (!textEl) return;
+  const text = textEl.value.trim();
+  const ratingVal = parseFloat(ratingEl ? ratingEl.value : '');
   if (!text) { msg.className='msg error'; msg.textContent='리뷰 텍스트를 입력해주세요.'; return; }
   if (text.length<30) { msg.className='msg error'; msg.textContent='텍스트가 너무 짧습니다 (30자 이상).'; return; }
   const existing = db[originalName];
   if (!existing) { msg.className='msg error'; msg.textContent='회사를 먼저 선택해주세요.'; return; }
   const prev = existing._raw_review || '';
-  if (prev.indexOf(text.slice(0,30)) !== -1) { msg.className='msg error'; msg.textContent='이미 등록된 리뷰와 중복됩니다.'; return; }
+  if (prev.indexOf(text.slice(0,30))!==-1) { msg.className='msg error'; msg.textContent='이미 등록된 리뷰와 중복됩니다.'; return; }
   btn.disabled=true; btn.textContent='저장 중...';
   existing.hidden_signal = calcHiddenSignal(prev+' '+text);
   existing._raw_review = prev+' '+text;
@@ -595,14 +633,14 @@ async function addReview(en, originalName) {
   await saveCompany(originalName, existing);
   btn.disabled=false; btn.textContent='DB에 추가 저장';
   msg.className='msg success';
-  msg.textContent = '저장되었습니다.' + (existing.overall_rating ? ' (평점 '+parseFloat(existing.overall_rating).toFixed(1)+'점으로 업데이트)' : '');
+  msg.textContent='저장되었습니다.'+(existing.overall_rating?' (평점 '+parseFloat(existing.overall_rating).toFixed(1)+'점으로 업데이트)':'');
   setTimeout(function() {
     const target = document.getElementById('result-area').innerHTML ? 'result-area' : 'manual-result-area';
     renderResult(db[originalName], null, target);
-  }, 600);
+  },600);
 }
 
-// ── 게시판 ──
+// ── 게시판 로드 ──
 async function loadBoard(type) {
   const listEl = document.getElementById('board-'+type+'-list');
   listEl.innerHTML = '<div class="board-empty">불러오는 중...</div>';
@@ -614,14 +652,19 @@ async function loadBoard(type) {
     snap.forEach(function(d) {
       const p = d.data(); const id = d.id;
       const date = p.createdAt ? p.createdAt.toDate().toLocaleDateString('ko-KR') : '';
+      const author = p.author ? escHtml(p.author) : '익명';
       const upVoted = localStorage.getItem('vote_up_'+id);
       const downVoted = localStorage.getItem('vote_down_'+id);
+      const bodyText = type==='fix' ? (p.content||'') : (p.reason||'');
       html += '<div class="board-post">';
-      html += '<div class="board-post-header"><div><div class="board-post-title">'+escHtml(p.company||'(제목 없음)')+'</div><div class="board-post-meta">'+date+(p.field?' · '+escHtml(p.field):'')+'</div></div></div>';
-      html += '<div class="board-post-body">'+escHtml(p.content||p.reason||'')+'</div>';
+      html += '<div class="board-post-title">'+escHtml(p.company||'(제목 없음)')+(p.field?' <span style="font-size:11px;color:#aaa;font-weight:400">· '+escHtml(p.field)+'</span>':'')+'</div>';
+      html += '<div class="board-post-meta">'+author+' · '+date+'</div>';
+      html += '<div class="board-post-body">'+escHtml(bodyText)+'</div>';
       html += '<div class="board-post-actions">';
-      html += '<button class="vote-btn up'+(upVoted?' voted':'')+'" onclick="vote(\''+type+'\',\''+id+'\',\'up\')">👍 <span class="vote-count" id="up-'+id+'">'+(p.upvotes||0)+'</span></button>';
-      html += '<button class="vote-btn down'+(downVoted?' voted':'')+'" onclick="vote(\''+type+'\',\''+id+'\',\'down\')">👎 <span class="vote-count" id="down-'+id+'">'+(p.downvotes||0)+'</span></button>';
+      html += '<button class="vote-btn up'+(upVoted?' voted':'')+'" onclick="vote(\''+type+'\',\''+id+'\',\'up\')">👍 <span id="up-'+id+'">'+(p.upvotes||0)+'</span></button>';
+      html += '<button class="vote-btn down'+(downVoted?' voted':'')+'" onclick="vote(\''+type+'\',\''+id+'\',\'down\')">👎 <span id="down-'+id+'">'+(p.downvotes||0)+'</span></button>';
+      html += '<button class="edit-btn" onclick="openEditModal(\''+type+'\',\''+id+'\',\''+escHtml(bodyText).replace(/'/g,"&#39;")+'\')">✏️ 수정</button>';
+      html += '<button class="edit-btn danger-btn" onclick="openDeleteModal(\''+type+'\',\''+id+'\')">🗑 삭제</button>';
       html += '</div></div>';
     });
     listEl.innerHTML = html;
@@ -630,9 +673,13 @@ async function loadBoard(type) {
   }
 }
 
+// ── 게시글 등록 ──
 async function submitPost(type) {
   if (!fsReady) { alert('Firebase 연결 후 이용 가능합니다.'); return; }
   const msgEl = document.getElementById(type+'-msg');
+  const pw = document.getElementById(type+'-pw').value;
+  const author = document.getElementById(type+'-author').value.trim();
+  if (!pw) { msgEl.className='msg error'; msgEl.textContent='비밀번호를 입력해주세요.'; return; }
   let company, field, content;
   if (type==='fix') {
     company = document.getElementById('fix-company').value.trim();
@@ -645,26 +692,101 @@ async function submitPost(type) {
     content = document.getElementById('req-reason').value.trim();
     if (!company) { msgEl.className='msg error'; msgEl.textContent='회사명을 입력해주세요.'; return; }
   }
-  const btn = document.querySelector('#pane-board-'+type+' button.primary');
+  const btn = document.querySelector('#pane-board-'+type+' .board-form button.primary');
   btn.disabled=true; btn.textContent='등록 중...';
   try {
     await fs.collection('board_'+type).add({
-      company: company, field: field||'',
-      content: type==='fix'?content:'', reason: type==='req'?content:'',
+      company: company,
+      field: field||'',
+      content: type==='fix' ? content : '',
+      reason: type==='req' ? content : '',
+      author: author||'익명',
+      pwHash: simpleHash(pw),
       upvotes:0, downvotes:0,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     msgEl.className='msg success'; msgEl.textContent='등록되었습니다.';
-    ['fix-company','fix-field','fix-content','req-company','req-industry','req-reason'].forEach(id => {
+    ['fix-company','fix-field','fix-content','fix-pw','fix-author',
+     'req-company','req-industry','req-reason','req-pw','req-author'].forEach(id => {
       const el = document.getElementById(id); if (el) el.value='';
     });
     setTimeout(function(){loadBoard(type);}, 500);
   } catch(e) {
-    msgEl.className='msg error'; msgEl.textContent='등록에 실패했습니다. ('+e.message+')';
+    msgEl.className='msg error'; msgEl.textContent='등록에 실패했습니다.';
   }
   btn.disabled=false; btn.textContent='등록';
 }
 
+// ── 수정 모달 ──
+function openEditModal(type, id, currentContent) {
+  document.getElementById('edit-post-id').value = id;
+  document.getElementById('edit-board-type').value = type;
+  document.getElementById('edit-pw').value = '';
+  document.getElementById('edit-content').value = currentContent;
+  document.getElementById('edit-msg').textContent = '';
+  document.getElementById('edit-modal-sub').textContent = type==='fix' ? '정보 수정 건의 게시글을 수정합니다.' : '기업 추가 요청 게시글을 수정합니다.';
+  document.getElementById('edit-modal').style.display = 'flex';
+}
+function closeEditModal() { document.getElementById('edit-modal').style.display='none'; }
+async function submitEdit() {
+  const id = document.getElementById('edit-post-id').value;
+  const type = document.getElementById('edit-board-type').value;
+  const pw = document.getElementById('edit-pw').value;
+  const content = document.getElementById('edit-content').value.trim();
+  const msgEl = document.getElementById('edit-msg');
+  if (!pw) { msgEl.className='msg error'; msgEl.textContent='비밀번호를 입력해주세요.'; return; }
+  if (!content) { msgEl.className='msg error'; msgEl.textContent='내용을 입력해주세요.'; return; }
+  const btn = document.querySelector('#edit-modal .modal-actions button.primary');
+  btn.disabled=true; btn.textContent='확인 중...';
+  try {
+    const docRef = fs.collection('board_'+type).doc(id);
+    const docSnap = await docRef.get();
+    if (!docSnap.exists) { msgEl.className='msg error'; msgEl.textContent='게시글을 찾을 수 없습니다.'; btn.disabled=false; btn.textContent='수정 완료'; return; }
+    const storedHash = docSnap.data().pwHash;
+    if (storedHash !== simpleHash(pw)) { msgEl.className='msg error'; msgEl.textContent='비밀번호가 일치하지 않습니다.'; btn.disabled=false; btn.textContent='수정 완료'; return; }
+    const updateData = type==='fix' ? {content: content} : {reason: content};
+    updateData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+    await docRef.update(updateData);
+    closeEditModal();
+    loadBoard(type);
+  } catch(e) {
+    msgEl.className='msg error'; msgEl.textContent='수정에 실패했습니다.';
+  }
+  btn.disabled=false; btn.textContent='수정 완료';
+}
+
+// ── 삭제 모달 ──
+function openDeleteModal(type, id) {
+  document.getElementById('delete-post-id').value = id;
+  document.getElementById('delete-board-type').value = type;
+  document.getElementById('delete-pw').value = '';
+  document.getElementById('delete-msg').textContent = '';
+  document.getElementById('delete-modal').style.display = 'flex';
+}
+function closeDeleteModal() { document.getElementById('delete-modal').style.display='none'; }
+async function submitDelete() {
+  const id = document.getElementById('delete-post-id').value;
+  const type = document.getElementById('delete-board-type').value;
+  const pw = document.getElementById('delete-pw').value;
+  const msgEl = document.getElementById('delete-msg');
+  if (!pw) { msgEl.className='msg error'; msgEl.textContent='비밀번호를 입력해주세요.'; return; }
+  const btn = document.querySelector('#delete-modal .modal-actions button.danger-btn');
+  btn.disabled=true; btn.textContent='확인 중...';
+  try {
+    const docRef = fs.collection('board_'+type).doc(id);
+    const docSnap = await docRef.get();
+    if (!docSnap.exists) { msgEl.className='msg error'; msgEl.textContent='게시글을 찾을 수 없습니다.'; btn.disabled=false; btn.textContent='삭제하기'; return; }
+    if (docSnap.data().pwHash !== simpleHash(pw)) { msgEl.className='msg error'; msgEl.textContent='비밀번호가 일치하지 않습니다.'; btn.disabled=false; btn.textContent='삭제하기'; return; }
+    await docRef.delete();
+    closeDeleteModal();
+    loadBoard(type);
+  } catch(e) {
+    msgEl.className='msg error'; msgEl.textContent='삭제에 실패했습니다.';
+  }
+  btn.disabled=false; btn.textContent='삭제하기';
+}
+
+// ── 투표 ──
 async function vote(type, postId, dir) {
   if (!fsReady) return;
   const storageKey = 'vote_'+dir+'_'+postId;
@@ -677,7 +799,7 @@ async function vote(type, postId, dir) {
     const val = Math.max(0,(cur.data()[dir+'votes']||0)-1);
     await ref.update({[dir+'votes']:val});
     const el = document.getElementById(dir+'-'+postId); if(el) el.textContent=val;
-    const btn = document.querySelector('.vote-btn.'+dir+'[onclick*="'+postId+'"]'); if(btn) btn.classList.remove('voted');
+    const btns = document.querySelectorAll('.vote-btn.'+dir); btns.forEach(b=>{ if(b.onclick && String(b.onclick).indexOf(postId)!==-1) b.classList.remove('voted'); });
     return;
   }
   if (localStorage.getItem(oppKey)) {
@@ -686,14 +808,13 @@ async function vote(type, postId, dir) {
     const val = Math.max(0,(cur.data()[oppDir+'votes']||0)-1);
     await ref.update({[oppDir+'votes']:val});
     const el = document.getElementById(oppDir+'-'+postId); if(el) el.textContent=val;
-    const btn = document.querySelector('.vote-btn.'+oppDir+'[onclick*="'+postId+'"]'); if(btn) btn.classList.remove('voted');
   }
   localStorage.setItem(storageKey,'1');
   const cur = await ref.get();
   const val = (cur.data()[dir+'votes']||0)+1;
   await ref.update({[dir+'votes']:val});
   const el = document.getElementById(dir+'-'+postId); if(el) el.textContent=val;
-  const btn = document.querySelector('.vote-btn.'+dir+'[onclick*="'+postId+'"]'); if(btn) btn.classList.add('voted');
+  const btns = document.querySelectorAll('.vote-btn.'+dir); btns.forEach(b=>{ if(b.onclick && String(b.onclick).indexOf(postId)!==-1) b.classList.add('voted'); });
 }
 
 function escHtml(s) {
