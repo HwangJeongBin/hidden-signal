@@ -24,10 +24,9 @@ button{padding:8px 18px;border:0.5px solid #d0d0c8;border-radius:8px;font-size:1
 button:hover{background:#f0f0ec}
 button.primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
 button.primary:hover{background:#333}
-button.danger-btn{background:#fff;color:#c62828;border-color:#ef9a9a}
+button.danger-btn{color:#c62828;border-color:#ef9a9a}
 button.danger-btn:hover{background:#FFEBEE}
-button.edit-btn{background:#fff;color:#185FA5;border-color:#90CAF9;font-size:12px;padding:4px 10px}
-button.edit-btn:hover{background:#EEF4FF}
+button.sm-btn{font-size:12px;padding:4px 10px}
 button:disabled{opacity:0.45;cursor:not-allowed}
 .search-row{display:flex;gap:8px;margin-bottom:1rem}
 .search-row input{flex:1}
@@ -58,11 +57,11 @@ button:disabled{opacity:0.45;cursor:not-allowed}
 .msg.success{color:#2e7d32}
 .msg.error{color:#c62828}
 .msg.info{color:#185FA5}
-.no-result{padding:2.5rem 0;text-align:center;color:#888;font-size:13px}
 .size-compare-row{display:flex;align-items:center;gap:10px;margin-top:8px}
 .size-bar-bg{flex:1;height:6px;background:#e8e8e0;border-radius:3px;overflow:hidden}
 .size-bar-fill{height:100%;border-radius:3px;background:#bbb}
 .hint{font-size:11px;color:#999;margin-top:4px}
+.pw-hint{font-size:11px;color:#999;margin-top:3px;margin-bottom:8px}
 mark{background:#FFF3CD;color:#856404;border-radius:2px;padding:0 2px}
 .db-status{font-size:11px;color:#aaa;margin-top:4px}
 .db-status.ok{color:#2e7d32}
@@ -78,27 +77,31 @@ mark{background:#FFF3CD;color:#856404;border-radius:2px;padding:0 2px}
 .match-summary{display:flex;align-items:center;gap:12px;margin-bottom:12px}
 .match-score{font-size:22px;font-weight:600}
 .input-row{display:flex;gap:8px;margin-bottom:8px}
-.board-post{border:0.5px solid #e0e0d8;border-radius:10px;padding:14px;margin-bottom:10px;background:#fff}
-.board-post-title{font-size:13px;font-weight:500}
-.board-post-meta{font-size:11px;color:#aaa;margin-top:2px;margin-bottom:8px}
-.board-post-body{font-size:12px;color:#555;line-height:1.6;margin-bottom:10px;white-space:pre-wrap}
-.board-post-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.board-form{border:0.5px solid #e0e0d8;border-radius:10px;padding:14px;margin-bottom:1rem;background:#f8f8f6}
+.board-empty{text-align:center;padding:2rem 0;color:#aaa;font-size:13px}
+/* 게시글 카드 */
+.post-card{border:0.5px solid #e0e0d8;border-radius:10px;padding:14px;margin-bottom:10px;background:#fff}
+.post-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.post-card-meta{font-size:11px;color:#aaa;margin-top:2px}
+.post-field-row{display:flex;gap:6px;margin-bottom:6px;align-items:flex-start}
+.post-field-label{font-size:11px;color:#888;min-width:72px;padding-top:2px;flex-shrink:0}
+.post-field-value{font-size:13px;color:#1a1a1a;line-height:1.5;flex:1;white-space:pre-wrap;word-break:break-word}
+.post-field-value.highlight{font-weight:500}
+.post-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:0.5px solid #f0f0ec}
 .vote-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;font-size:12px;border-radius:20px;border:0.5px solid #d0d0c8;background:#fff;cursor:pointer;font-family:inherit}
 .vote-btn:hover{background:#f0f0ec}
 .vote-btn.up.voted{background:#E8F5E9;border-color:#a5d6a7;color:#2e7d32}
 .vote-btn.down.voted{background:#FFEBEE;border-color:#ef9a9a;color:#c62828}
-.board-form{border:0.5px solid #e0e0d8;border-radius:10px;padding:14px;margin-bottom:1rem;background:#f8f8f6}
-.board-empty{text-align:center;padding:2rem 0;color:#aaa;font-size:13px}
-.pw-hint{font-size:11px;color:#999;margin-top:3px}
+.updated-badge{font-size:10px;color:#aaa;margin-left:4px}
 /* 모달 */
-.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:1000}
-.modal{background:#fff;border-radius:14px;padding:1.5rem;width:90%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:1000;padding:1rem}
+.modal{background:#fff;border-radius:14px;padding:1.5rem;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
 .modal h2{font-size:16px;font-weight:600;margin-bottom:4px}
 .modal .sub{font-size:12px;color:#888;margin-bottom:1.2rem}
-.modal-actions{display:flex;gap:8px;margin-top:1rem}
+.modal-section{font-size:12px;color:#888;margin:12px 0 6px;font-weight:500;text-transform:uppercase;letter-spacing:0.03em}
+.modal-actions{display:flex;gap:8px;margin-top:1.2rem}
 .modal-actions button{flex:1}
-/* 수정/삭제 확인 모달 */
-.sm-modal{background:#fff;border-radius:14px;padding:1.5rem;width:90%;max-width:380px}
+.sm-modal{background:#fff;border-radius:14px;padding:1.5rem;width:100%;max-width:380px}
 .sm-modal h3{font-size:15px;font-weight:600;margin-bottom:8px}
 .sm-modal p{font-size:13px;color:#555;margin-bottom:1rem;line-height:1.5}
 </style>
@@ -119,7 +122,6 @@ mark{background:#FFF3CD;color:#856404;border-radius:2px;padding:0 2px}
     <button class="nav-tab" onclick="switchMain('board-req')">➕ 기업 추가 요청</button>
   </div>
 
-  <!-- 회사 검색 -->
   <div id="pane-search">
     <div class="card">
       <div class="search-row">
@@ -132,7 +134,6 @@ mark{background:#FFF3CD;color:#856404;border-radius:2px;padding:0 2px}
     <div id="result-area"></div>
   </div>
 
-  <!-- 리뷰 직접 입력 -->
   <div id="pane-review" style="display:none">
     <div class="card">
       <div class="section-title">리뷰 직접 입력 분석</div>
@@ -140,7 +141,7 @@ mark{background:#FFF3CD;color:#856404;border-radius:2px;padding:0 2px}
       <div id="manual-name-msg" class="msg" style="margin-bottom:6px"></div>
       <textarea id="manual-review" placeholder="잡플래닛 리뷰 텍스트를 붙여넣으세요 (장점·단점·경영진에게 바라는 점 포함, 필수)" style="height:110px;margin-bottom:8px"></textarea>
       <textarea id="manual-job" placeholder="(선택사항) 채용 공고 담당업무를 붙여넣으면 공고 신뢰도를 추가 분석합니다" style="height:80px;margin-bottom:8px"></textarea>
-      <div class="input-row" style="margin-bottom:8px">
+      <div class="input-row">
         <input type="number" id="manual-rating" placeholder="종합 평점 (예: 3.2)" step="0.1" min="1" max="5">
         <select id="manual-size">
           <option value="">회사 규모 선택 (필수)</option>
@@ -149,24 +150,23 @@ mark{background:#FFF3CD;color:#856404;border-radius:2px;padding:0 2px}
           <option value="스타트업">스타트업 (50명 미만)</option>
         </select>
       </div>
-      <button class="primary" onclick="analyzeManual()" style="width:100%">분석 및 DB 저장 →</button>
+      <button class="primary" onclick="analyzeManual()" style="width:100%;margin-top:8px">분석 및 DB 저장 →</button>
       <div id="manual-msg" class="msg" style="margin-top:6px"></div>
       <div class="hint" style="margin-top:4px">* 분석 결과는 Firebase DB에 저장되어 모든 사용자와 공유됩니다.</div>
     </div>
     <div id="manual-result-area"></div>
   </div>
 
-  <!-- 정보 수정 건의 게시판 -->
   <div id="pane-board-fix" style="display:none">
     <div class="card">
       <div class="section-title" style="margin-bottom:4px">🛠 잘못된 정보 수정 건의</div>
       <div style="font-size:12px;color:#888;margin-bottom:1rem">등록된 회사 정보 중 잘못된 내용이 있다면 알려주세요. 검토 후 반영됩니다.</div>
       <div class="board-form">
-        <div class="input-row" style="margin-bottom:8px">
+        <div class="input-row">
           <input type="text" id="fix-author" placeholder="이름 또는 닉네임 (선택사항)">
           <input type="password" id="fix-pw" placeholder="수정/삭제용 비밀번호 (필수)">
         </div>
-        <div class="pw-hint" style="margin-bottom:8px">* 비밀번호는 나중에 수정·삭제 시 필요합니다. 반드시 기억해두세요.</div>
+        <div class="pw-hint">* 비밀번호는 나중에 수정·삭제 시 필요합니다. 반드시 기억해두세요.</div>
         <input type="text" id="fix-company" placeholder="수정 대상 회사명" style="margin-bottom:8px">
         <input type="text" id="fix-field" placeholder="수정할 항목 (예: 직원 수, 업종, 평점 등)" style="margin-bottom:8px">
         <textarea id="fix-content" placeholder="현재 잘못된 내용과 올바른 내용을 함께 작성해주세요&#10;예) 현재: 중소기업 / 올바른: 스타트업 (직원 35명)" style="height:80px;margin-bottom:8px"></textarea>
@@ -177,17 +177,16 @@ mark{background:#FFF3CD;color:#856404;border-radius:2px;padding:0 2px}
     </div>
   </div>
 
-  <!-- 기업 추가 요청 게시판 -->
   <div id="pane-board-req" style="display:none">
     <div class="card">
       <div class="section-title" style="margin-bottom:4px">➕ 기업 추가 요청</div>
       <div style="font-size:12px;color:#888;margin-bottom:1rem">분석하고 싶은 기업을 요청해주세요. 공감이 많은 순서대로 우선 추가합니다.</div>
       <div class="board-form">
-        <div class="input-row" style="margin-bottom:8px">
+        <div class="input-row">
           <input type="text" id="req-author" placeholder="이름 또는 닉네임 (선택사항)">
           <input type="password" id="req-pw" placeholder="수정/삭제용 비밀번호 (필수)">
         </div>
-        <div class="pw-hint" style="margin-bottom:8px">* 비밀번호는 나중에 수정·삭제 시 필요합니다. 반드시 기억해두세요.</div>
+        <div class="pw-hint">* 비밀번호는 나중에 수정·삭제 시 필요합니다. 반드시 기억해두세요.</div>
         <input type="text" id="req-company" placeholder="추가 요청할 회사명" style="margin-bottom:8px">
         <input type="text" id="req-industry" placeholder="업종 (예: IT/웹/통신)" style="margin-bottom:8px">
         <textarea id="req-reason" placeholder="추가 요청 이유 또는 참고 사항 (선택사항)" style="height:70px;margin-bottom:8px"></textarea>
@@ -214,28 +213,57 @@ mark{background:#FFF3CD;color:#856404;border-radius:2px;padding:0 2px}
     <input type="text" id="modal-industry" placeholder="업종 (예: IT/웹/통신)" style="margin-bottom:8px">
     <input type="number" id="modal-employees" placeholder="직원 수 (선택사항)" style="margin-bottom:8px">
     <input type="number" id="modal-rating" placeholder="잡플래닛 평점 (선택사항)" step="0.1" min="1" max="5" style="margin-bottom:8px">
-    <textarea id="modal-review" placeholder="잡플래닛 리뷰를 붙여넣으세요 (필수, 최소 1개 이상)&#10;장점·단점·경영진에게 바라는 점을 포함해주세요" style="height:110px;margin-bottom:4px"></textarea>
+    <textarea id="modal-review" placeholder="잡플래닛 리뷰를 붙여넣으세요 (필수)&#10;장점·단점·경영진에게 바라는 점을 포함해주세요" style="height:110px;margin-bottom:4px"></textarea>
     <div id="modal-msg" class="msg" style="margin-bottom:8px"></div>
     <div class="modal-actions">
-      <button onclick="closeModal()">취소</button>
+      <button onclick="closeModal('add-modal')">취소</button>
       <button class="primary" onclick="submitNewCompany()">추가하기</button>
     </div>
   </div>
 </div>
 
-<!-- 수정 모달 -->
-<div id="edit-modal" class="modal-overlay" style="display:none">
+<!-- 수정 모달 (fix) -->
+<div id="edit-fix-modal" class="modal-overlay" style="display:none">
   <div class="modal">
-    <h2>게시글 수정</h2>
-    <div class="sub" id="edit-modal-sub"></div>
-    <input type="hidden" id="edit-post-id">
-    <input type="hidden" id="edit-board-type">
-    <input type="password" id="edit-pw" placeholder="등록 시 설정한 비밀번호" style="margin-bottom:8px">
-    <textarea id="edit-content" placeholder="수정할 내용을 입력하세요" style="height:100px;margin-bottom:4px"></textarea>
-    <div id="edit-msg" class="msg" style="margin-bottom:8px"></div>
+    <h2>🛠 정보 수정 건의 수정</h2>
+    <div class="sub">등록 시 설정한 비밀번호를 입력하면 모든 내용을 수정할 수 있습니다.</div>
+    <input type="hidden" id="ef-id">
+    <div class="modal-section">비밀번호 확인</div>
+    <input type="password" id="ef-pw" placeholder="등록 시 설정한 비밀번호" style="margin-bottom:12px">
+    <div class="modal-section">작성자 정보</div>
+    <input type="text" id="ef-author" placeholder="이름 또는 닉네임" style="margin-bottom:8px">
+    <input type="password" id="ef-new-pw" placeholder="새 비밀번호 (변경하려면 입력, 유지하려면 빈칸)" style="margin-bottom:12px">
+    <div class="modal-section">건의 내용</div>
+    <input type="text" id="ef-company" placeholder="수정 대상 회사명" style="margin-bottom:8px">
+    <input type="text" id="ef-field" placeholder="수정할 항목" style="margin-bottom:8px">
+    <textarea id="ef-content" placeholder="건의 내용" style="height:90px;margin-bottom:4px"></textarea>
+    <div id="ef-msg" class="msg" style="margin-bottom:4px"></div>
     <div class="modal-actions">
-      <button onclick="closeEditModal()">취소</button>
-      <button class="primary" onclick="submitEdit()">수정 완료</button>
+      <button onclick="closeModal('edit-fix-modal')">취소</button>
+      <button class="primary" onclick="submitEdit('fix')">수정 완료</button>
+    </div>
+  </div>
+</div>
+
+<!-- 수정 모달 (req) -->
+<div id="edit-req-modal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <h2>➕ 기업 추가 요청 수정</h2>
+    <div class="sub">등록 시 설정한 비밀번호를 입력하면 모든 내용을 수정할 수 있습니다.</div>
+    <input type="hidden" id="er-id">
+    <div class="modal-section">비밀번호 확인</div>
+    <input type="password" id="er-pw" placeholder="등록 시 설정한 비밀번호" style="margin-bottom:12px">
+    <div class="modal-section">작성자 정보</div>
+    <input type="text" id="er-author" placeholder="이름 또는 닉네임" style="margin-bottom:8px">
+    <input type="password" id="er-new-pw" placeholder="새 비밀번호 (변경하려면 입력, 유지하려면 빈칸)" style="margin-bottom:12px">
+    <div class="modal-section">요청 내용</div>
+    <input type="text" id="er-company" placeholder="추가 요청할 회사명" style="margin-bottom:8px">
+    <input type="text" id="er-industry" placeholder="업종" style="margin-bottom:8px">
+    <textarea id="er-reason" placeholder="추가 요청 이유" style="height:80px;margin-bottom:4px"></textarea>
+    <div id="er-msg" class="msg" style="margin-bottom:4px"></div>
+    <div class="modal-actions">
+      <button onclick="closeModal('edit-req-modal')">취소</button>
+      <button class="primary" onclick="submitEdit('req')">수정 완료</button>
     </div>
   </div>
 </div>
@@ -244,13 +272,13 @@ mark{background:#FFF3CD;color:#856404;border-radius:2px;padding:0 2px}
 <div id="delete-modal" class="modal-overlay" style="display:none">
   <div class="sm-modal">
     <h3>게시글 삭제</h3>
-    <p>삭제 후에는 복구할 수 없습니다. 등록 시 설정한 비밀번호를 입력해주세요.</p>
-    <input type="hidden" id="delete-post-id">
-    <input type="hidden" id="delete-board-type">
-    <input type="password" id="delete-pw" placeholder="비밀번호" style="margin-bottom:8px">
-    <div id="delete-msg" class="msg" style="margin-bottom:8px"></div>
+    <p>삭제 후에는 복구할 수 없습니다.<br>등록 시 설정한 비밀번호를 입력해주세요.</p>
+    <input type="hidden" id="del-id">
+    <input type="hidden" id="del-type">
+    <input type="password" id="del-pw" placeholder="비밀번호" style="margin-bottom:8px">
+    <div id="del-msg" class="msg" style="margin-bottom:8px"></div>
     <div class="modal-actions">
-      <button onclick="closeDeleteModal()">취소</button>
+      <button onclick="closeModal('delete-modal')">취소</button>
       <button class="danger-btn" onclick="submitDelete()">삭제하기</button>
     </div>
   </div>
@@ -294,14 +322,10 @@ let sizeAvg = JSON.parse(JSON.stringify(INITIAL_DB_DATA.size_avg));
 let chartInst = null;
 let fsReady = false;
 
-// 비밀번호 단순 해시 (SHA 없이 간단한 방식)
 function simpleHash(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return 'h' + Math.abs(hash).toString(36);
+  let h = 0;
+  for (let i = 0; i < str.length; i++) { h = ((h << 5) - h) + str.charCodeAt(i); h |= 0; }
+  return 'h' + Math.abs(h).toString(36);
 }
 
 // ── Firebase ──
@@ -335,7 +359,6 @@ function switchMain(tab) {
   if (tab==='board-req') loadBoard('req');
 }
 
-// ── 입력 정제 ──
 function sanitizeName(raw) { return raw.trim().replace(/\s+/g,' ').replace(/[<>"']/g,''); }
 function sanitizeCompanyInput(el) {
   el.value = el.value.replace(/[<>"]/g,'');
@@ -373,7 +396,10 @@ function selectCompany(name) {
   if (db[name]) renderResult(db[name], null, 'result-area');
 }
 
-// ── 기업 추가 모달 ──
+// ── 모달 공통 ──
+function closeModal(id) { document.getElementById(id).style.display='none'; }
+
+// ── 기업 추가 ──
 function openAddModal(name) {
   document.getElementById('company-list').style.display = 'none';
   document.getElementById('modal-name').value = name;
@@ -383,7 +409,6 @@ function openAddModal(name) {
   document.getElementById('modal-msg').textContent = '';
   document.getElementById('add-modal').style.display = 'flex';
 }
-function closeModal() { document.getElementById('add-modal').style.display='none'; }
 async function submitNewCompany() {
   const name = sanitizeName(document.getElementById('modal-name').value);
   const size = document.getElementById('modal-size').value;
@@ -401,7 +426,7 @@ async function submitNewCompany() {
   db[name] = newData;
   await saveCompany(name, newData);
   btn.disabled=false; btn.textContent='추가하기';
-  closeModal();
+  closeModal('add-modal');
   document.getElementById('search-input').value = name;
   renderResult(db[name], null, 'result-area');
 }
@@ -506,7 +531,7 @@ function renderJobResult(name, result) {
   el.innerHTML = html || '<div style="font-size:12px;color:#999">분석할 내용이 충분하지 않습니다.</div>';
 }
 
-// ── 히든 시그널 계산 ──
+// ── 히든 시그널 ──
 function calcHiddenSignal(text) {
   const tokens = text.split(' ');
   const total = tokens.length;
@@ -652,19 +677,41 @@ async function loadBoard(type) {
     snap.forEach(function(d) {
       const p = d.data(); const id = d.id;
       const date = p.createdAt ? p.createdAt.toDate().toLocaleDateString('ko-KR') : '';
+      const updDate = p.updatedAt ? ' (수정됨 '+p.updatedAt.toDate().toLocaleDateString('ko-KR')+')' : '';
       const author = p.author ? escHtml(p.author) : '익명';
       const upVoted = localStorage.getItem('vote_up_'+id);
       const downVoted = localStorage.getItem('vote_down_'+id);
-      const bodyText = type==='fix' ? (p.content||'') : (p.reason||'');
-      html += '<div class="board-post">';
-      html += '<div class="board-post-title">'+escHtml(p.company||'(제목 없음)')+(p.field?' <span style="font-size:11px;color:#aaa;font-weight:400">· '+escHtml(p.field)+'</span>':'')+'</div>';
-      html += '<div class="board-post-meta">'+author+' · '+date+'</div>';
-      html += '<div class="board-post-body">'+escHtml(bodyText)+'</div>';
-      html += '<div class="board-post-actions">';
+      html += '<div class="post-card">';
+      html += '<div class="post-card-header">';
+      html += '<div style="flex:1"><div style="font-size:13px;font-weight:500">'+escHtml(p.company||'(회사명 없음)')+'</div>';
+      html += '<div class="post-card-meta">'+author+' · '+date+updDate+'</div></div>';
+      html += '</div>';
+
+      if (type==='fix') {
+        // 정보 수정 건의 — 필드별 구분 표시
+        html += '<div class="post-field-row"><span class="post-field-label">대상 회사</span><span class="post-field-value highlight">'+escHtml(p.company||'-')+'</span></div>';
+        if (p.field) html += '<div class="post-field-row"><span class="post-field-label">수정할 항목</span><span class="post-field-value highlight" style="color:#e65100">'+escHtml(p.field)+'</span></div>';
+        if (p.content) html += '<div class="post-field-row"><span class="post-field-label">건의 내용</span><span class="post-field-value">'+escHtml(p.content)+'</span></div>';
+      } else {
+        // 기업 추가 요청 — 필드별 구분 표시
+        html += '<div class="post-field-row"><span class="post-field-label">요청 회사</span><span class="post-field-value highlight">'+escHtml(p.company||'-')+'</span></div>';
+        if (p.field) html += '<div class="post-field-row"><span class="post-field-label">업종</span><span class="post-field-value">'+escHtml(p.field)+'</span></div>';
+        if (p.reason) html += '<div class="post-field-row"><span class="post-field-label">요청 이유</span><span class="post-field-value">'+escHtml(p.reason)+'</span></div>';
+      }
+
+      html += '<div class="post-actions">';
       html += '<button class="vote-btn up'+(upVoted?' voted':'')+'" onclick="vote(\''+type+'\',\''+id+'\',\'up\')">👍 <span id="up-'+id+'">'+(p.upvotes||0)+'</span></button>';
       html += '<button class="vote-btn down'+(downVoted?' voted':'')+'" onclick="vote(\''+type+'\',\''+id+'\',\'down\')">👎 <span id="down-'+id+'">'+(p.downvotes||0)+'</span></button>';
-      html += '<button class="edit-btn" onclick="openEditModal(\''+type+'\',\''+id+'\',\''+escHtml(bodyText).replace(/'/g,"&#39;")+'\')">✏️ 수정</button>';
-      html += '<button class="edit-btn danger-btn" onclick="openDeleteModal(\''+type+'\',\''+id+'\')">🗑 삭제</button>';
+      // 수정/삭제 버튼 — data 속성으로 원본값 전달
+      const safeData = encodeURIComponent(JSON.stringify({
+        company: p.company||'',
+        field: p.field||'',
+        content: p.content||'',
+        reason: p.reason||'',
+        author: p.author||''
+      }));
+      html += '<button class="sm-btn" style="color:#185FA5;border-color:#90CAF9" onclick="openEditModal(\''+type+'\',\''+id+'\',\''+safeData+'\')">✏️ 수정</button>';
+      html += '<button class="sm-btn danger-btn" onclick="openDeleteModal(\''+type+'\',\''+id+'\')">🗑 삭제</button>';
       html += '</div></div>';
     });
     listEl.innerHTML = html;
@@ -685,7 +732,7 @@ async function submitPost(type) {
     company = document.getElementById('fix-company').value.trim();
     field = document.getElementById('fix-field').value.trim();
     content = document.getElementById('fix-content').value.trim();
-    if (!company||!content) { msgEl.className='msg error'; msgEl.textContent='회사명과 내용을 입력해주세요.'; return; }
+    if (!company||!content) { msgEl.className='msg error'; msgEl.textContent='회사명과 건의 내용을 입력해주세요.'; return; }
   } else {
     company = document.getElementById('req-company').value.trim();
     field = document.getElementById('req-industry').value.trim();
@@ -696,10 +743,9 @@ async function submitPost(type) {
   btn.disabled=true; btn.textContent='등록 중...';
   try {
     await fs.collection('board_'+type).add({
-      company: company,
-      field: field||'',
-      content: type==='fix' ? content : '',
-      reason: type==='req' ? content : '',
+      company: company, field: field||'',
+      content: type==='fix'?content:'',
+      reason: type==='req'?content:'',
       author: author||'익명',
       pwHash: simpleHash(pw),
       upvotes:0, downvotes:0,
@@ -717,37 +763,69 @@ async function submitPost(type) {
   btn.disabled=false; btn.textContent='등록';
 }
 
-// ── 수정 모달 ──
-function openEditModal(type, id, currentContent) {
-  document.getElementById('edit-post-id').value = id;
-  document.getElementById('edit-board-type').value = type;
-  document.getElementById('edit-pw').value = '';
-  document.getElementById('edit-content').value = currentContent;
-  document.getElementById('edit-msg').textContent = '';
-  document.getElementById('edit-modal-sub').textContent = type==='fix' ? '정보 수정 건의 게시글을 수정합니다.' : '기업 추가 요청 게시글을 수정합니다.';
-  document.getElementById('edit-modal').style.display = 'flex';
+// ── 수정 모달 열기 ──
+function openEditModal(type, id, encodedData) {
+  const data = JSON.parse(decodeURIComponent(encodedData));
+  const prefix = type==='fix' ? 'ef' : 'er';
+  document.getElementById(prefix+'-id').value = id;
+  document.getElementById(prefix+'-pw').value = '';
+  document.getElementById(prefix+'-new-pw').value = '';
+  document.getElementById(prefix+'-author').value = data.author||'';
+  document.getElementById(prefix+'-company').value = data.company||'';
+  if (type==='fix') {
+    document.getElementById('ef-field').value = data.field||'';
+    document.getElementById('ef-content').value = data.content||'';
+    document.getElementById('ef-msg').textContent = '';
+  } else {
+    document.getElementById('er-industry').value = data.field||'';
+    document.getElementById('er-reason').value = data.reason||'';
+    document.getElementById('er-msg').textContent = '';
+  }
+  document.getElementById('edit-'+type+'-modal').style.display = 'flex';
 }
-function closeEditModal() { document.getElementById('edit-modal').style.display='none'; }
-async function submitEdit() {
-  const id = document.getElementById('edit-post-id').value;
-  const type = document.getElementById('edit-board-type').value;
-  const pw = document.getElementById('edit-pw').value;
-  const content = document.getElementById('edit-content').value.trim();
-  const msgEl = document.getElementById('edit-msg');
-  if (!pw) { msgEl.className='msg error'; msgEl.textContent='비밀번호를 입력해주세요.'; return; }
-  if (!content) { msgEl.className='msg error'; msgEl.textContent='내용을 입력해주세요.'; return; }
-  const btn = document.querySelector('#edit-modal .modal-actions button.primary');
+
+// ── 수정 제출 ──
+async function submitEdit(type) {
+  const prefix = type==='fix' ? 'ef' : 'er';
+  const id = document.getElementById(prefix+'-id').value;
+  const pw = document.getElementById(prefix+'-pw').value;
+  const newPw = document.getElementById(prefix+'-new-pw').value;
+  const author = document.getElementById(prefix+'-author').value.trim();
+  const company = document.getElementById(prefix+'-company').value.trim();
+  const msgEl = document.getElementById(prefix+'-msg');
+
+  let field, content;
+  if (type==='fix') {
+    field = document.getElementById('ef-field').value.trim();
+    content = document.getElementById('ef-content').value.trim();
+    if (!company||!content) { msgEl.className='msg error'; msgEl.textContent='회사명과 건의 내용을 입력해주세요.'; return; }
+  } else {
+    field = document.getElementById('er-industry').value.trim();
+    content = document.getElementById('er-reason').value.trim();
+    if (!company) { msgEl.className='msg error'; msgEl.textContent='회사명을 입력해주세요.'; return; }
+  }
+  if (!pw) { msgEl.className='msg error'; msgEl.textContent='현재 비밀번호를 입력해주세요.'; return; }
+
+  const btn = document.querySelector('#edit-'+type+'-modal .modal-actions button.primary');
   btn.disabled=true; btn.textContent='확인 중...';
   try {
     const docRef = fs.collection('board_'+type).doc(id);
     const docSnap = await docRef.get();
     if (!docSnap.exists) { msgEl.className='msg error'; msgEl.textContent='게시글을 찾을 수 없습니다.'; btn.disabled=false; btn.textContent='수정 완료'; return; }
-    const storedHash = docSnap.data().pwHash;
-    if (storedHash !== simpleHash(pw)) { msgEl.className='msg error'; msgEl.textContent='비밀번호가 일치하지 않습니다.'; btn.disabled=false; btn.textContent='수정 완료'; return; }
-    const updateData = type==='fix' ? {content: content} : {reason: content};
-    updateData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+    if (docSnap.data().pwHash !== simpleHash(pw)) { msgEl.className='msg error'; msgEl.textContent='비밀번호가 일치하지 않습니다.'; btn.disabled=false; btn.textContent='수정 완료'; return; }
+
+    const updateData = {
+      company: company, field: field||'',
+      author: author||'익명',
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if (type==='fix') { updateData.content = content; }
+    else { updateData.reason = content||''; }
+    // 새 비밀번호 설정
+    if (newPw) updateData.pwHash = simpleHash(newPw);
+
     await docRef.update(updateData);
-    closeEditModal();
+    closeModal('edit-'+type+'-modal');
     loadBoard(type);
   } catch(e) {
     msgEl.className='msg error'; msgEl.textContent='수정에 실패했습니다.';
@@ -757,18 +835,17 @@ async function submitEdit() {
 
 // ── 삭제 모달 ──
 function openDeleteModal(type, id) {
-  document.getElementById('delete-post-id').value = id;
-  document.getElementById('delete-board-type').value = type;
-  document.getElementById('delete-pw').value = '';
-  document.getElementById('delete-msg').textContent = '';
+  document.getElementById('del-id').value = id;
+  document.getElementById('del-type').value = type;
+  document.getElementById('del-pw').value = '';
+  document.getElementById('del-msg').textContent = '';
   document.getElementById('delete-modal').style.display = 'flex';
 }
-function closeDeleteModal() { document.getElementById('delete-modal').style.display='none'; }
 async function submitDelete() {
-  const id = document.getElementById('delete-post-id').value;
-  const type = document.getElementById('delete-board-type').value;
-  const pw = document.getElementById('delete-pw').value;
-  const msgEl = document.getElementById('delete-msg');
+  const id = document.getElementById('del-id').value;
+  const type = document.getElementById('del-type').value;
+  const pw = document.getElementById('del-pw').value;
+  const msgEl = document.getElementById('del-msg');
   if (!pw) { msgEl.className='msg error'; msgEl.textContent='비밀번호를 입력해주세요.'; return; }
   const btn = document.querySelector('#delete-modal .modal-actions button.danger-btn');
   btn.disabled=true; btn.textContent='확인 중...';
@@ -778,7 +855,7 @@ async function submitDelete() {
     if (!docSnap.exists) { msgEl.className='msg error'; msgEl.textContent='게시글을 찾을 수 없습니다.'; btn.disabled=false; btn.textContent='삭제하기'; return; }
     if (docSnap.data().pwHash !== simpleHash(pw)) { msgEl.className='msg error'; msgEl.textContent='비밀번호가 일치하지 않습니다.'; btn.disabled=false; btn.textContent='삭제하기'; return; }
     await docRef.delete();
-    closeDeleteModal();
+    closeModal('delete-modal');
     loadBoard(type);
   } catch(e) {
     msgEl.className='msg error'; msgEl.textContent='삭제에 실패했습니다.';
@@ -799,7 +876,7 @@ async function vote(type, postId, dir) {
     const val = Math.max(0,(cur.data()[dir+'votes']||0)-1);
     await ref.update({[dir+'votes']:val});
     const el = document.getElementById(dir+'-'+postId); if(el) el.textContent=val;
-    const btns = document.querySelectorAll('.vote-btn.'+dir); btns.forEach(b=>{ if(b.onclick && String(b.onclick).indexOf(postId)!==-1) b.classList.remove('voted'); });
+    const b = document.querySelector('.vote-btn.'+dir+'[onclick*="'+postId+'"]'); if(b) b.classList.remove('voted');
     return;
   }
   if (localStorage.getItem(oppKey)) {
@@ -814,7 +891,7 @@ async function vote(type, postId, dir) {
   const val = (cur.data()[dir+'votes']||0)+1;
   await ref.update({[dir+'votes']:val});
   const el = document.getElementById(dir+'-'+postId); if(el) el.textContent=val;
-  const btns = document.querySelectorAll('.vote-btn.'+dir); btns.forEach(b=>{ if(b.onclick && String(b.onclick).indexOf(postId)!==-1) b.classList.add('voted'); });
+  const b = document.querySelector('.vote-btn.'+dir+'[onclick*="'+postId+'"]'); if(b) b.classList.add('voted');
 }
 
 function escHtml(s) {
