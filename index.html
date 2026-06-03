@@ -898,32 +898,20 @@ async function vote(type, postId, dir) {
   const b = document.querySelector('.vote-btn.'+dir+'[onclick*="'+postId+'"]'); if(b) b.classList.add('voted');
 }
 
-// Hugging Face 임베딩 API를 사용하여 공고와 리뷰의 의미적 유사도를 계산하는 함수
-const HF_TOKEN = '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';
-const HF_MODEL = 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2';
+// Hugging Face 임베딩은 Vercel Function(/api/embed)을 통해 서버에서 처리하여 토큰이 클라이언트에 노출되지 않음
 
 async function getEmbedding(text) {
-  const response = await fetch(
-    'https://api-inference.huggingface.co/pipeline/feature-extraction/' + HF_MODEL,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + HF_TOKEN,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ inputs: text.slice(0, 512), options: { wait_for_model: true } })
-    }
-  );
-  if (!response.ok) throw new Error('API 호출 실패: ' + response.status);
-  const data = await response.json();
-  // 문장 임베딩 결과가 2차원 배열로 오는 경우 평균 처리
-  if (Array.isArray(data[0])) {
-    const len = data[0].length;
-    const avg = new Array(len).fill(0);
-    data.forEach(row => row.forEach((v, i) => { avg[i] += v; }));
-    return avg.map(v => v / data.length);
+  const response = await fetch('/api/embed', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text })
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ error: response.status }));
+    throw new Error(err.error || 'API 오류: ' + response.status);
   }
-  return data;
+  const data = await response.json();
+  return data.vector;
 }
 
 function cosineSimilarity(a, b) {
@@ -948,11 +936,10 @@ async function runAIAnalysis(name) {
     resultEl.innerHTML = '<div style="font-size:13px;color:#888;padding:12px 0">🤖 AI 의미 분석 중입니다. 처음 호출 시 모델 로딩으로 20~30초 소요될 수 있습니다...</div>';
   }
 
-  const btn = document.querySelector('button[onclick="runAIAnalysis(\''+name+'\')"]');
+  const btn = document.querySelector('button[onclick="runAIAnalysis(''+name+'')"]');
   if (btn) { btn.disabled = true; btn.textContent = '분석 중...'; }
 
   try {
-    // 공고와 리뷰를 각각 앞 512자씩 잘라서 임베딩
     const jobText = el.value.trim();
     const [jobEmb, revEmb] = await Promise.all([
       getEmbedding(jobText),
@@ -966,7 +953,6 @@ async function runAIAnalysis(name) {
                   pct >= 35 ? '보통 — 부분적으로 일치하나 일부 괴리 가능성' :
                   '낮음 — 공고와 실제 업무 간 의미적 괴리 가능성';
 
-    // 기존 키워드 분석 결과도 함께 표시
     const kwResult = analyzeJobMatch(jobText, reviewText);
     let html = '';
 
@@ -980,7 +966,6 @@ async function runAIAnalysis(name) {
     html += '<div style="font-size:11px;color:#888;margin-top:4px">단어 일치가 아닌 문장의 의미를 기반으로 측정한 유사도입니다. 표현이 달라도 같은 업무면 높게 측정됩니다.</div>';
     html += '</div>';
 
-    // 키워드 기반 분석 결과도 함께 표시
     if (kwResult.catMatches && kwResult.catMatches.length) {
       const matched = kwResult.catMatches.filter(c => c.found).length;
       const total = kwResult.catMatches.length;
@@ -1019,6 +1004,10 @@ async function runAIAnalysis(name) {
   } catch(e) {
     if (resultEl) resultEl.innerHTML = '<div style="font-size:12px;color:#c62828;padding:8px 0">AI 분석에 실패했습니다: ' + escHtml(e.message) + '<br>잠시 후 다시 시도해주세요. (모델 로딩 중이거나 네트워크 오류일 수 있습니다.)</div>';
   }
+
+  if (btn) { btn.disabled = false; btn.textContent = '🤖 AI 의미 분석 (Beta)'; }
+}
+
 
   if (btn) { btn.disabled = false; btn.textContent = '🤖 AI 의미 분석 (Beta)'; }
 }
