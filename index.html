@@ -618,7 +618,7 @@ function renderResult(data, jobResult, targetId) {
   html += '<button class="primary" onclick="runJobAnalysis(\''+en+'\')">키워드 분석하기 →</button>';
   html += '<button style="background:#fff;border:0.5px solid #90CAF9;color:#185FA5;font-size:13px" data-ainame="'+en+'" onclick="runAIAnalysis(\''+en+'\')">🤖 AI 의미 분석 (Beta)</button>';
   html += '</div>';
-  html += '<div style="font-size:11px;color:#999;margin-top:4px">AI 의미 분석은 Hugging Face 임베딩 모델을 사용합니다. 첫 호출 시 20~30초 소요될 수 있습니다.</div>';
+  html += '<div style="font-size:11px;color:#999;margin-top:4px">AI 의미 분석은 xenova/transformers 임베딩 모델을 사용합니다. 첫 호출 시 30초~1분 소요될 수 있습니다.</div>';
   html += '</div><div id="job-result-'+en+'" style="margin-top:10px"></div></div>';
   html += '<div class="separator"><div class="section-title" style="margin-bottom:4px">리뷰 추가 등록</div>';
   html += '<div style="font-size:12px;color:#999;margin-bottom:8px">중복되지 않는 리뷰를 추가하면 Firebase DB에 반영됩니다.</div>';
@@ -974,7 +974,7 @@ async function runAIAnalysis(name) {
     let html = '';
 
     html += '<div style="background:#EEF4FF;border:0.5px solid #90CAF9;border-radius:8px;padding:12px;margin-bottom:12px">';
-    html += '<div style="font-size:12px;color:#185FA5;font-weight:500;margin-bottom:8px">🤖 AI 의미 분석 결과 (Hugging Face 임베딩 기반)</div>';
+    html += '<div style="font-size:12px;color:#185FA5;font-weight:500;margin-bottom:8px">🤖 AI 의미 분석 결과 (xenova/transformers 기반)</div>';
     html += '<div class="match-summary">';
     html += '<span class="match-score" style="color:'+color+'">'+pct+'%</span>';
     html += '<div style="flex:1"><div style="font-size:12px;color:#888;margin-bottom:4px">'+label+'</div>';
