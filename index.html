@@ -603,7 +603,7 @@ function renderResult(data, jobResult, targetId) {
   html += '<textarea id="job-textarea-'+en+'" placeholder="담당업무 텍스트를 붙여넣으세요" style="height:90px;margin-bottom:8px"></textarea>';
   html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
   html += '<button class="primary" onclick="runJobAnalysis(\''+en+'\')">키워드 분석하기 →</button>';
-  html += '<button style="background:#fff;border:0.5px solid #90CAF9;color:#185FA5;font-size:13px" onclick="runAIAnalysis(\''+en+'\')">🤖 AI 의미 분석 (Beta)</button>';
+  html += '<button style="background:#fff;border:0.5px solid #90CAF9;color:#185FA5;font-size:13px" data-ainame="'+en+'" onclick="runAIAnalysis(\''+en+'\')">🤖 AI 의미 분석 (Beta)</button>';
   html += '</div>';
   html += '<div style="font-size:11px;color:#999;margin-top:4px">AI 의미 분석은 Hugging Face 임베딩 모델을 사용합니다. 첫 호출 시 20~30초 소요될 수 있습니다.</div>';
   html += '</div><div id="job-result-'+en+'" style="margin-top:10px"></div></div>';
@@ -936,8 +936,8 @@ async function runAIAnalysis(name) {
     resultEl.innerHTML = '<div style="font-size:13px;color:#888;padding:12px 0">🤖 AI 의미 분석 중입니다. 처음 호출 시 모델 로딩으로 20~30초 소요될 수 있습니다...</div>';
   }
 
-  const btn = document.querySelector('button[onclick="runAIAnalysis(''+name+'')"]');
-  if (btn) { btn.disabled = true; btn.textContent = '분석 중...'; }
+  const aiBtn = document.querySelector('[data-ainame="' + name + '"]');
+  if (aiBtn) { aiBtn.disabled = true; aiBtn.textContent = '분석 중...'; }
 
   try {
     const jobText = el.value.trim();
@@ -1005,11 +1005,7 @@ async function runAIAnalysis(name) {
     if (resultEl) resultEl.innerHTML = '<div style="font-size:12px;color:#c62828;padding:8px 0">AI 분석에 실패했습니다: ' + escHtml(e.message) + '<br>잠시 후 다시 시도해주세요. (모델 로딩 중이거나 네트워크 오류일 수 있습니다.)</div>';
   }
 
-  if (btn) { btn.disabled = false; btn.textContent = '🤖 AI 의미 분석 (Beta)'; }
-}
-
-
-  if (btn) { btn.disabled = false; btn.textContent = '🤖 AI 의미 분석 (Beta)'; }
+  if (aiBtn) { aiBtn.disabled = false; aiBtn.textContent = '🤖 AI 의미 분석 (Beta)'; }
 }
 
 function escHtml(s) {
