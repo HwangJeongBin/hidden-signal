@@ -285,6 +285,19 @@ mark{background:#FFF3CD;color:#856404;border-radius:2px;padding:0 2px}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script type="module">
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+env.allowLocalModels = false;
+window._getXenovaPipeline = async function(onProgress) {
+  if (window._xenovaPipe) return window._xenovaPipe;
+  window._xenovaPipe = await pipeline(
+    'feature-extraction',
+    'Xenova/paraphrase-multilingual-MiniLM-L12-v2',
+    { progress_callback: onProgress }
+  );
+  return window._xenovaPipe;
+};
+</script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
@@ -898,22 +911,13 @@ async function vote(type, postId, dir) {
   const b = document.querySelector('.vote-btn.'+dir+'[onclick*="'+postId+'"]'); if(b) b.classList.add('voted');
 }
 
-// Hugging Face 임베딩을 Render.com 프록시 서버를 통해 호출하는 방식
-// 토큰은 서버 환경변수에만 저장되어 클라이언트에 노출되지 않음
-const EMBED_SERVER = 'https://little-pond-f629.austinjb.workers.dev';
+// @xenova/transformers를 사용하여 브라우저 내에서 직접 임베딩 모델을 실행하는 방식
+// 서버나 API 키 없이 동작하며 처음 실행 시 모델 파일을 다운로드함
 
-async function getEmbedding(text) {
-  const response = await fetch(EMBED_SERVER + '/embed', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text })
-  });
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({ error: response.status }));
-    throw new Error(err.error || 'API 오류: ' + response.status);
-  }
-  const data = await response.json();
-  return data.vector;
+async function getEmbedding(text, onProgress) {
+  const pipe = await window._getXenovaPipeline(onProgress);
+  const output = await pipe(text.slice(0, 512), { pooling: 'mean', normalize: true });
+  return Array.from(output.data);
 }
 
 function cosineSimilarity(a, b) {
@@ -935,18 +939,29 @@ async function runAIAnalysis(name) {
 
   const resultEl = document.getElementById('job-result-' + name);
   if (resultEl) {
-    resultEl.innerHTML = '<div style="font-size:13px;color:#888;padding:12px 0">🤖 AI 의미 분석 중입니다. 처음 호출 시 모델 로딩으로 20~30초 소요될 수 있습니다...</div>';
+    resultEl.innerHTML = '<div id="ai-progress" style="font-size:13px;color:#888;padding:12px 0">🤖 AI 모델 준비 중... (처음 실행 시 모델 다운로드로 30초~1분 소요될 수 있습니다)</div>';
   }
 
   const aiBtn = document.querySelector('[data-ainame="' + name + '"]');
   if (aiBtn) { aiBtn.disabled = true; aiBtn.textContent = '분석 중...'; }
 
+  function onProgress(progress) {
+    const el = document.getElementById('ai-progress');
+    if (!el) return;
+    if (progress.status === 'downloading') {
+      const pct = progress.progress ? Math.round(progress.progress) : 0;
+      el.innerHTML = '🤖 모델 다운로드 중... ' + pct + '% (' + (progress.file || '') + ')';
+    } else if (progress.status === 'loading') {
+      el.innerHTML = '🤖 모델 로딩 중...';
+    } else if (progress.status === 'ready') {
+      el.innerHTML = '🤖 모델 준비 완료, 분석 중...';
+    }
+  }
+
   try {
     const jobText = el.value.trim();
-    const [jobEmb, revEmb] = await Promise.all([
-      getEmbedding(jobText),
-      getEmbedding(reviewText)
-    ]);
+    const jobEmb = await getEmbedding(jobText, onProgress);
+    const revEmb = await getEmbedding(reviewText);
 
     const similarity = cosineSimilarity(jobEmb, revEmb);
     const pct = Math.round(similarity * 100);
