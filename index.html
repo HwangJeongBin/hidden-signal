@@ -900,7 +900,7 @@ async function vote(type, postId, dir) {
 
 // Hugging Face 임베딩을 Render.com 프록시 서버를 통해 호출하는 방식
 // 토큰은 서버 환경변수에만 저장되어 클라이언트에 노출되지 않음
-const EMBED_SERVER = 'https://hidden-signal-server.onrender.com';
+const EMBED_SERVER = 'https://little-pond-f629.austinjb.workers.dev';
 
 async function getEmbedding(text) {
   const response = await fetch(EMBED_SERVER + '/embed', {
